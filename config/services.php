@@ -34,8 +34,15 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
     'unsplash' => [
     'access_key' => env('QPKl4as7rD-IB1I-tnxlh4A7Nq8FAgRtdUgxcdQb7Pc'),
-],
+    ],
+
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
 
 ];

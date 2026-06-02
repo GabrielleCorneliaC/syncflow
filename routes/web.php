@@ -6,7 +6,62 @@ use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
+// ─────────────────────────────────────────────────────────
+//  GUEST ROUTES (hanya bisa diakses kalau BELUM login)
+// ─────────────────────────────────────────────────────────
+
+Route::middleware('guest')->group(function () {
+
+    // ── Email / Password Auth ─────────────────────────────
+    Route::get('/login',   [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',  [AuthController::class, 'login'])->name('login.store');
+
+    Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+
+    // ── Google OAuth ──────────────────────────────────────
+    // Step 1: redirect ke Google consent screen
+    Route::get('/auth/google',          [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+    // Step 2: callback dari Google setelah user mengizinkan
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+});
+
+// ─────────────────────────────────────────────────────────
+//  AUTHENTICATED ROUTES (harus login dulu)
+// ─────────────────────────────────────────────────────────
+
+Route::middleware('auth')->group(function () {
+
+    // Root redirect ke dashboard
+    Route::get('/', fn () => redirect()->route('dashboard'));
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // ── Profil ────────────────────────────────────────────
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/',             [ProfileController::class, 'show'])->name('show');
+        Route::patch('/info',       [ProfileController::class, 'updateInfo'])->name('update.info');
+        Route::patch('/password',   [ProfileController::class, 'updatePassword'])->name('update.password');
+        Route::post('/avatar',      [ProfileController::class, 'updateAvatar'])->name('update.avatar');
+        Route::delete('/delete',    [ProfileController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── Admin ─────────────────────────────────────────────
+    Route::prefix('admin/users')->name('admin.users.')->middleware('can:admin')->group(function () {
+        Route::get('/',         [ProfileController::class, 'index'])->name('index');
+        Route::delete('/{user}',[ProfileController::class, 'adminDestroy'])->name('destroy');
+    });
+
+
+/*
 // =========================================================================
 // JALAN PINTAS SEMENTARA (Ditaruh di LUAR area auth agar bisa diakses)
 // =========================================================================
@@ -71,4 +126,5 @@ Route::middleware(['auth'])->group(function () {
     // Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
     // Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
     // Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+    */
 });
