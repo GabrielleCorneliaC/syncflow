@@ -26,14 +26,26 @@
         </div>
 
         {{-- Admin actions (only visible to owner) --}}
-        @if(auth()->id() === $workspace->owner_id)
+        @if(!empty($isOwner))
         <div class="absolute top-4 right-6 flex gap-2">
-            <button onclick="openInviteModal()"
+            <button onclick="openInviteModal({{ $workspace->id }})"
                 class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
                 style="background: rgba(255,255,255,0.9); color: #C8216B;">
                 <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                Invite Member
+                Invite
             </button>
+
+            <button onclick="openEditWorkspaceModal()"
+                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                style="background: rgba(255,255,255,0.9); color: #1A1A2E;">
+                Edit
+            </button>
+
+            <form action="{{ route('workspaces.destroy', $workspace->id) }}" method="POST" onsubmit="return confirm('Hapus workspace ini?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all" style="background: rgba(255,255,255,0.9); color: #E11D48;">Delete</button>
+            </form>
         </div>
         @endif
     </div>
@@ -62,7 +74,7 @@
     <div id="panel-task" class="px-8 py-6">
         <div class="flex items-center justify-between mb-4">
             <p class="text-sm text-gray-500">Menampilkan <span class="font-semibold text-gray-700">{{ $tasks->count() }}</span> tugas</p>
-            @if(auth()->id() === $workspace->owner_id)
+            @if(!empty($isOwner))
             <button onclick="openAddTaskModal()"
                 class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
                 style="background: #C8216B;">
@@ -166,14 +178,14 @@
             </table>
 
             {{-- Pagination --}}
-            @if($tasks->hasPages())
+            {{-- @if($tasks->hasPages())
             <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
                 <span class="text-xs text-gray-400">Showing {{ $tasks->firstItem() }} to {{ $tasks->lastItem() }} of {{ $tasks->total() }} tasks</span>
                 <div class="flex gap-1">
                     {{ $tasks->links('vendor.pagination.simple-tailwind') }}
                 </div>
             </div>
-            @endif
+            @endif --}}
         </div>
     </div>
 
@@ -252,7 +264,7 @@
                              class="hidden absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 w-32">
                             <button onclick="editResource({{ $resource->id }})"
                                 class="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50">Edit</button>
-                            <form action="{{ route('workspaces.resources.destroy', [$workspace->id, $resource->id]) }}" method="POST">
+                            <form action="#" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50">Hapus</button>
                             </form>
@@ -260,32 +272,40 @@
                     </div>
                 </div>
 
-                {{-- Icon --}}
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-                     style="background: #FFF0F6;">
-                    @php
-                        $icon = 'link';
-                        if(str_contains($resource->url, 'drive.google')) $icon = 'folder';
-                        elseif(str_contains($resource->url, 'docs.google') || str_contains($resource->url, 'sheet')) $icon = 'doc';
-                        elseif(str_contains($resource->url, 'figma')) $icon = 'figma';
-                    @endphp
-                    @if($icon === 'folder')
-                    <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                    @elseif($icon === 'doc')
-                    <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    @else
-                    <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                    @endif
-                </div>
-
-                <h3 class="font-semibold text-gray-800 text-sm mb-1">{{ $resource->url | basename | split('.')[0] ?? $resource->url }}</h3>
-                <p class="text-xs text-gray-400 mb-3 leading-relaxed line-clamp-2">{{ $resource->description }}</p>
-
                 <a href="{{ $resource->url }}" target="_blank" rel="noopener"
-                   class="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-                   style="background: #FFF0F6; color: #C8216B;">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    Open Link
+                   class="block pr-8">
+                    {{-- Icon --}}
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+                         style="background: #FFF0F6;">
+                        @php
+                            $icon = 'link';
+                            if(str_contains($resource->url, 'drive.google')) $icon = 'folder';
+                            elseif(str_contains($resource->url, 'docs.google') || str_contains($resource->url, 'sheet')) $icon = 'doc';
+                            elseif(str_contains($resource->url, 'figma')) $icon = 'figma';
+                        @endphp
+                        @if($icon === 'folder')
+                        <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                        @elseif($icon === 'doc')
+                        <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        @else
+                        <svg width="18" height="18" fill="none" stroke="#C8216B" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                        @endif
+                    </div>
+
+                    @php
+                        $parsedPath = parse_url($resource->url, PHP_URL_PATH) ?: '';
+                        $displayName = trim(basename($parsedPath));
+                        $displayName = $displayName !== '' ? $displayName : (parse_url($resource->url, PHP_URL_HOST) ?: $resource->url);
+                        $displayName = pathinfo($displayName, PATHINFO_FILENAME) ?: $displayName;
+                    @endphp
+                    <h3 class="font-semibold text-gray-800 text-sm mb-1 break-words">{{ $displayName }}</h3>
+                    <p class="text-xs text-gray-400 mb-3 leading-relaxed line-clamp-2">{{ $resource->description }}</p>
+
+                    <span class="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
+                       style="background: #FFF0F6; color: #C8216B;">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Open Link
+                    </span>
                 </a>
             </div>
             @empty
@@ -310,7 +330,7 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         </div>
-        <form action="{{ route('workspaces.tasks.store', $workspace->id) }}" method="POST" class="space-y-4">
+        <form action="#" method="POST" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Tugas</label>
@@ -364,7 +384,7 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         </div>
-        <form action="{{ route('workspaces.schedules.store', $workspace->id) }}" method="POST" class="space-y-4">
+       <form action="#" method="POST" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Agenda</label>
@@ -404,7 +424,7 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         </div>
-        <form action="{{ route('workspaces.resources.store', $workspace->id) }}" method="POST" class="space-y-4">
+        <form action="#" method="POST" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">URL / Link</label>
@@ -420,6 +440,51 @@
                 <button type="button" onclick="document.getElementById('modal-add-resource').classList.add('hidden')"
                     class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
                 <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style="background:#C8216B;">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{-- EDIT WORKSPACE MODAL --}}
+<div id="modal-edit-workspace" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')" class="absolute inset-0" style="background:rgba(0,0,0,0.4);"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="font-display font-bold text-lg">Edit Workspace</h2>
+            <button onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-400">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="edit-workspace-form" method="POST">
+            @csrf
+            @method('PATCH')
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Workspace</label>
+                <input type="text" name="name" id="edit-ws-name" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm">
+            </div>
+            <div class="mt-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi Singkat</label>
+                <input type="text" name="description" id="edit-ws-desc" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm">
+            </div>
+            <div class="mt-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Cover Image URL</label>
+                <input type="url" name="cover_image" id="edit-ws-cover" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm">
+                <div class="flex gap-2 mt-2">
+                    <input type="text" id="unsplash-query-edit" placeholder="Cari foto (e.g. teamwork, nature...)"
+                        class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <button type="button" onclick="searchUnsplashEdit()" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C8216B;">Cari</button>
+                </div>
+
+                <div id="unsplash-results-edit" class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto hidden mt-2"></div>
+                <div id="unsplash-loading-edit" class="hidden text-center py-2 mt-2"><div class="inline-block w-5 h-5 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div></div>
+
+                <div id="edit-cover-preview" class="hidden mt-2 rounded-xl overflow-hidden" style="height: 80px;">
+                    <img id="edit-cover-preview-img" src="" alt="" class="w-full h-full object-cover">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100">Batal</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style="background:#C8216B;">Simpan</button>
             </div>
         </form>
     </div>
@@ -479,6 +544,85 @@
             document.querySelectorAll('[id^="resource-menu-"]').forEach(m => m.classList.add('hidden'));
         }
     });
+
+    // ─── UNSPLASH SEARCH FOR EDIT MODAL ─────────────────────────────────
+    async function searchUnsplashEdit() {
+        const query = document.getElementById('unsplash-query-edit').value.trim();
+        if (!query) return;
+
+        const results = document.getElementById('unsplash-results-edit');
+        const loading = document.getElementById('unsplash-loading-edit');
+
+        results.classList.add('hidden');
+        loading.classList.remove('hidden');
+
+        try {
+            const res = await fetch(`/api/unsplash/search?query=${encodeURIComponent(query)}`);
+            loading.classList.add('hidden');
+            results.innerHTML = '';
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                results.innerHTML = `<p class="col-span-3 text-xs text-red-400 text-center py-2">Gagal: ${err.error || res.statusText || 'Unknown'}</p>`;
+                results.classList.remove('hidden');
+                return;
+            }
+
+            const data = await res.json();
+            const photos = Array.isArray(data.results) ? data.results : [];
+            if (photos.length === 0) {
+                results.innerHTML = '<p class="col-span-3 text-xs text-gray-400 text-center py-2">Tidak ditemukan.</p>';
+                results.classList.remove('hidden');
+                return;
+            }
+
+            photos.forEach(photo => {
+                const img = document.createElement('img');
+                img.src = photo.urls.small;
+                img.alt = photo.alt_description ?? query;
+                img.className = 'w-full rounded-lg cursor-pointer object-cover transition-all hover:ring-2 hover:opacity-90';
+                img.style.height = '64px';
+                img.onclick = () => selectCoverForEdit(photo.urls.regular, img);
+                results.appendChild(img);
+            });
+
+            results.classList.remove('hidden');
+        } catch (e) {
+            loading.classList.add('hidden');
+            results.innerHTML = '<p class="col-span-3 text-xs text-red-400 text-center py-2">Gagal memuat foto. Coba lagi.</p>';
+            results.classList.remove('hidden');
+            console.error('Unsplash error', e);
+        }
+    }
+
+    function selectCoverForEdit(url, imgEl) {
+        document.getElementById('edit-ws-cover').value = url;
+        document.querySelectorAll('#unsplash-results-edit img').forEach(i => i.classList.remove('ring-2', 'ring-pink-500'));
+        imgEl.classList.add('ring-2', 'ring-pink-500');
+        document.getElementById('edit-cover-preview-img').src = url;
+        document.getElementById('edit-cover-preview').classList.remove('hidden');
+    }
+
+    // ─── EDIT WORKSPACE HANDLERS ─────────────────────────────────────
+    function openEditWorkspaceModal() {
+        const ws = @json($workspace);
+        document.getElementById('edit-ws-name').value = ws.name || '';
+        document.getElementById('edit-ws-desc').value = ws.description || '';
+        document.getElementById('edit-ws-cover').value = ws.cover_image || '';
+        const form = document.getElementById('edit-workspace-form');
+        form.action = `/workspaces/${ws.id}`;
+        // show preview if cover exists
+        if (ws.cover_image) {
+            document.getElementById('edit-cover-preview-img').src = ws.cover_image;
+            document.getElementById('edit-cover-preview').classList.remove('hidden');
+        } else {
+            document.getElementById('edit-cover-preview').classList.add('hidden');
+        }
+        // reset previous search results
+        document.getElementById('unsplash-results-edit').innerHTML = '';
+        document.getElementById('unsplash-results-edit').classList.add('hidden');
+        document.getElementById('unsplash-query-edit').value = '';
+        document.getElementById('modal-edit-workspace').classList.remove('hidden');
+    }
 </script>
 @endpush
 @endsection

@@ -57,12 +57,15 @@
                 {{-- Footer info --}}
                 <div class="absolute bottom-0 left-0 right-0 p-3">
                     <p class="text-white font-semibold text-sm leading-tight mb-2">{{ $ws->name }}</p>
+                    @if($ws->description)
+                    <p class="text-xs text-white/90 truncate">{{ \Illuminate\Support\Str::limit($ws->description, 80) }}</p>
+                    @endif
                     {{-- Member avatars --}}
                     <div class="flex items-center gap-1">
                         @foreach($ws->members->take(3) as $member)
-                        <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name).'&size=28&background=C8216B&color=fff' }}"
+                        <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=28&background=C8216B&color=fff' }}"
                              class="w-6 h-6 rounded-full border-2 border-white object-cover"
-                             title="{{ $member->name }}">
+                             title="{{ $member->user->name ?? 'Member' }}">
                         @endforeach
                         @if($ws->members->count() > 3)
                         <span class="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold text-white"
@@ -115,7 +118,7 @@
                     <p class="text-white font-semibold text-sm leading-tight mb-2">{{ $ws->name }}</p>
                     <div class="flex items-center gap-1">
                         @foreach($ws->members->take(3) as $member)
-                        <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name).'&size=28&background=6366f1&color=fff' }}"
+                        <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=28&background=6366f1&color=fff' }}"
                              class="w-6 h-6 rounded-full border-2 border-white object-cover">
                         @endforeach
                     </div>
@@ -151,6 +154,13 @@
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Workspace</label>
                 <input type="text" name="name" required placeholder="e.g. Kepanitiaan BEM 2025"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100 transition-all">
+            </div>
+
+            {{-- Description --}}
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi Singkat</label>
+                <input type="text" name="description" placeholder="Deskripsi singkat workspace (opsional)"
                     class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100 transition-all">
             </div>
 
@@ -198,8 +208,48 @@
             </div>
         </form>
     </div>
-</div>
-@endpush
+    </div>
+
+    {{-- INVITE MEMBER MODAL --}}
+    <div id="modal-invite" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-md p-10 space-y-8 bg-white border border-slate-200 shadow-2xl rounded-3xl">
+            <h2 class="text-3xl font-extrabold tracking-tight text-center text-slate-950">
+                Undang Anggota via Email
+            </h2>
+
+            <form id="invite-form" class="space-y-6" method="POST" action="#">
+                @csrf
+                <div class="space-y-2.5">
+                    <label for="invite-email" class="block text-sm font-medium text-slate-700">Alamat Email</label>
+                    <input
+                        type="email"
+                        id="invite-email"
+                        name="email"
+                        placeholder="e.g., nama@email.com"
+                        class="w-full px-5 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-500 transition duration-150"
+                        required
+                    />
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button
+                        type="button"
+                        onclick="closeInviteModal()"
+                        class="flex-1 px-6 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition duration-150"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 px-6 py-2.5 text-sm font-semibold text-white bg-[#ff4f8e] rounded-xl hover:bg-[#e63a75] shadow-md transition duration-150"
+                    >
+                        Kirim Undangan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endpush
 
 @push('scripts')
 <script>
@@ -246,12 +296,27 @@
         try {
             // Call Laravel backend route which proxies Unsplash
             const res  = await fetch(`/api/unsplash/search?query=${encodeURIComponent(query)}`);
-            const data = await res.json();
 
             loading.classList.add('hidden');
             results.innerHTML = '';
 
-            data.results.forEach(photo => {
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                results.innerHTML = `<p class="col-span-3 text-xs text-red-400 text-center py-2">Gagal: ${err.error || res.statusText || 'Unknown'}</p>`;
+                results.classList.remove('hidden');
+                return;
+            }
+
+            const data = await res.json();
+            const photos = Array.isArray(data.results) ? data.results : [];
+
+            if (photos.length === 0) {
+                results.innerHTML = '<p class="col-span-3 text-xs text-gray-400 text-center py-2">Tidak ditemukan.</p>';
+                results.classList.remove('hidden');
+                return;
+            }
+
+            photos.forEach(photo => {
                 const img = document.createElement('img');
                 img.src = photo.urls.small;
                 img.alt = photo.alt_description ?? query;
@@ -266,6 +331,7 @@
             loading.classList.add('hidden');
             results.innerHTML = '<p class="col-span-3 text-xs text-red-400 text-center py-2">Gagal memuat foto. Coba lagi.</p>';
             results.classList.remove('hidden');
+            console.error('Unsplash error', e);
         }
     }
 
@@ -281,6 +347,28 @@
 
     // Allow Enter key to search
     document.getElementById('unsplash-query')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchUnsplash(); } });
+
+        // ─── INVITE MODAL HELPERS ───────────────────────────────────────
+        function openInviteModal(workspaceId) {
+            let id = workspaceId;
+            if (!id) {
+                const parts = window.location.pathname.split('/').filter(Boolean);
+                const idx = parts.indexOf('workspaces');
+                if (idx !== -1 && parts.length > idx + 1) id = parts[idx + 1];
+            }
+            if (!id) return alert('Workspace ID tidak ditemukan. Buka halaman workspace terlebih dahulu.');
+
+            const form = document.getElementById('invite-form');
+            form.action = `/workspaces/${id}/members`;
+            document.getElementById('modal-invite').classList.remove('hidden');
+        }
+
+        function closeInviteModal() {
+            document.getElementById('modal-invite').classList.add('hidden');
+            const form = document.getElementById('invite-form');
+            form.action = '#';
+            form.reset();
+        }
 </script>
 @endpush
 @endsection

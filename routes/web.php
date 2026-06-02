@@ -4,7 +4,6 @@ use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
-use App\Http\Controllers\ResourceLinkController;
 use Illuminate\Support\Facades\Route;
 
 // =========================================================================
@@ -56,19 +55,20 @@ Route::middleware(['auth'])->group(function () {
     // 2. Rute khusus Admin/Owner (Hapus & Undang Anggota)
     Route::middleware(['workspace.role:admin'])->group(function () {
         Route::delete('/workspaces/{workspace_id}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
+        Route::patch('/workspaces/{workspace_id}', [WorkspaceController::class, 'update'])->name('workspaces.update');
         Route::post('/workspaces/{workspace_id}/members', [WorkspaceController::class, 'invite'])->name('workspaces.members.store');
     });
 
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GROUP: TUGAS KEVIN DLL (Tetap di-comment agar tidak error)
+    // GROUP: COLLABORATIVE FEATURES (Tasks, Schedules, Resources)
     // ─────────────────────────────────────────────────────────────────────────
-    // Route::post('/workspaces/{workspace}/schedules', [CollaborativeScheduleController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy']);
-    // Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy']);
-    // Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show']);
-    // Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
-    // Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+    // Route::post('/workspaces/{workspace_id}/tasks', [CollaborativeTaskController::class, 'store'])->name('workspaces.tasks.store');
+    // Route::get('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'show'])->name('workspaces.tasks.show');
+    // Route::patch('/workspaces/tasks/{task_id}/status', [CollaborativeTaskController::class, 'updateStatus'])->name('workspaces.tasks.updateStatus');
+    // Route::delete('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'destroy'])->name('workspaces.tasks.destroy');
+
+    // Route::post('/workspaces/{workspace_id}/schedules', [CollaborativeScheduleController::class, 'store'])->name('workspaces.schedules.store');
+    // Route::delete('/workspaces/{workspace_id}/schedules/{schedule_id}', [CollaborativeScheduleController::class, 'destroy'])->name('workspaces.schedules.destroy');
+
 });
