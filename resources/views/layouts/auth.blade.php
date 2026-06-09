@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}">
     <title>@yield('title', 'SyncFlow')</title>
 
     {{-- Fonts: Montserrat (heading) · Poppins (button/toggle) · Inter (body) --}}
@@ -78,12 +79,35 @@
         /* Scrollbar tipis di mobile */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbc7b6; border-radius: 99px; }
+
+        /* 1. Paksa mata bawaan browser (Edge) mati total ke akar-akarnya */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+        }
+
+        /* 2. Sembunyikan mata buatan kita kalau kotak masih kosong */
+        .sf-input:placeholder-shown + button {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity 0.2s ease;
+        }
+
+        /* 3. Munculkan mata, pastikan BISA DIKLIK, dan taruh di lapisan paling atas saat diketik */
+        .sf-input:not(:placeholder-shown) + button {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 50 !important;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center px-4 py-16
              sm:px-10 sm:py-[84px]">
 
     @yield('content')
+
+    @stack('scripts')
 
 </body>
 </html>

@@ -11,43 +11,47 @@ use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    // ─────────────────────────────────────────────
-    //  READ - Tampilkan halaman profil
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  READ
+    // ═══════════════════════════════════════════════
 
     public function show()
     {
         return view('profile.show', ['user' => Auth::user()]);
     }
 
-    // ─────────────────────────────────────────────
-    //  UPDATE - Perbarui nama & email
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  UPDATE — nama + email
+    //  Form mengirim first_name + last_name (sesuai Figma)
+    //  Digabung jadi kolom `name` di DB
+    // ═══════════════════════════════════════════════
 
     public function updateInfo(Request $request)
     {
         $user = Auth::user();
 
         $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name'  => ['required', 'string', 'max:100'],
+            'email'      => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
         ], [
-            'name.required'  => 'Nama wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.unique'   => 'Email sudah digunakan akun lain.',
+            'first_name.required' => 'Nama depan wajib diisi.',
+            'last_name.required'  => 'Nama belakang wajib diisi.',
+            'email.required'      => 'Email wajib diisi.',
+            'email.unique'        => 'Email sudah digunakan akun lain.',
         ]);
 
         $user->update([
-            'name'  => $request->name,
+            'name'  => trim($request->first_name . ' ' . $request->last_name),
             'email' => $request->email,
         ]);
 
-        return back()->with('success', 'Informasi profil berhasil diperbarui.');
+        return back()->with('success_info', 'Informasi profil berhasil diperbarui.');
     }
 
-    // ─────────────────────────────────────────────
-    //  UPDATE - Ganti password
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  UPDATE — password
+    // ═══════════════════════════════════════════════
 
     public function updatePassword(Request $request)
     {
@@ -63,19 +67,18 @@ class ProfileController extends Controller
             'password.min'              => 'Password minimal 8 karakter.',
         ]);
 
-        // Cek apakah password lama benar
         if (! Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Password saat ini salah.']);
         }
 
         $user->update(['password' => $request->password]);
 
-        return back()->with('success', 'Password berhasil diperbarui.');
+        return back()->with('success_password', 'Password berhasil diperbarui.');
     }
 
-    // ─────────────────────────────────────────────
-    //  UPDATE - Upload foto profil (avatar)
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  UPDATE — avatar/foto profil
+    // ═══════════════════════════════════════════════
 
     public function updateAvatar(Request $request)
     {
@@ -84,28 +87,28 @@ class ProfileController extends Controller
         ], [
             'avatar.required' => 'Pilih foto terlebih dahulu.',
             'avatar.image'    => 'File harus berupa gambar.',
-            'avatar.mimes'    => 'Format gambar harus jpeg, png, jpg, atau webp.',
-            'avatar.max'      => 'Ukuran foto maksimal 2MB.',
+            'avatar.mimes'    => 'Format: jpeg, png, jpg, webp.',
+            'avatar.max'      => 'Ukuran maks. 2MB.',
         ]);
 
         $user = Auth::user();
 
-        // Hapus avatar lama jika ada
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+        // Hapus avatar lama (hanya kalau path lokal, bukan URL Google)
+        if ($user->avatar
+            && ! str_starts_with($user->avatar, 'http')
+            && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        // Simpan avatar baru ke storage/app/public/avatars/
         $path = $request->file('avatar')->store('avatars', 'public');
-
         $user->update(['avatar' => $path]);
 
-        return back()->with('success', 'Foto profil berhasil diperbarui.');
+        return back()->with('success_info', 'Foto profil berhasil diperbarui.');
     }
 
-    // ─────────────────────────────────────────────
-    //  DELETE - Hapus akun sendiri
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  DELETE — hapus akun sendiri
+    // ═══════════════════════════════════════════════
 
     public function destroy(Request $request)
     {
@@ -121,8 +124,9 @@ class ProfileController extends Controller
             return back()->withErrors(['password' => 'Password tidak sesuai.']);
         }
 
-        // Hapus avatar jika ada
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+        if ($user->avatar
+            && ! str_starts_with($user->avatar, 'http')
+            && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
         }
 
@@ -133,12 +137,12 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('success', 'Akun kamu berhasil dihapus.');
+            ->with('success', 'Akun berhasil dihapus.');
     }
 
-    // ─────────────────────────────────────────────
-    //  [ADMIN ONLY] - Daftar semua user
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  ADMIN — daftar semua user
+    // ═══════════════════════════════════════════════
 
     public function index()
     {
@@ -147,9 +151,9 @@ class ProfileController extends Controller
         return view('profile.index', compact('users'));
     }
 
-    // ─────────────────────────────────────────────
-    //  [ADMIN ONLY] - Hapus user tertentu
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
+    //  ADMIN — hapus user tertentu
+    // ═══════════════════════════════════════════════
 
     public function adminDestroy(User $user)
     {
@@ -159,23 +163,24 @@ class ProfileController extends Controller
             return back()->with('error', 'Tidak bisa menghapus akun sendiri dari sini.');
         }
 
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+        if ($user->avatar
+            && ! str_starts_with($user->avatar, 'http')
+            && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
         }
 
         $user->delete();
-
         return back()->with('success', 'User ' . $user->name . ' berhasil dihapus.');
     }
 
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
     //  HELPER
-    // ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════
 
     private function authorizeAdmin(): void
     {
         if (! Auth::user()->isAdmin()) {
-            abort(403, 'Akses ditolak. Hanya admin yang diizinkan.');
+            abort(403, 'Akses ditolak.');
         }
     }
 }

@@ -26,17 +26,7 @@
         {{-- ── HEADER ── --}}
         <div class="flex flex-col items-center gap-2 pb-2">
             <div class="w-16 h-16 flex items-center justify-center">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16">
-                    <circle cx="32" cy="32" r="26" stroke="#b30084" stroke-width="3"/>
-                    <path d="M20 32 C20 24.3 26.3 18 34 18"
-                          stroke="#b30084" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    <path d="M34 18 L40 18 M40 18 L40 24"
-                          stroke="#b30084" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    <path d="M44 32 C44 39.7 37.7 46 30 46"
-                          stroke="#d400a0" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    <path d="M30 46 L24 46 M24 46 L24 40"
-                          stroke="#d400a0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
+                <img src="{{ asset('assets/logo.png') }}" alt="Logo SyncFlow" class="w-full h-full object-contain">
             </div>
 
             <h1 class="font-montserrat font-bold text-2xl leading-8 text-[#656026] text-center mt-2">
@@ -163,7 +153,7 @@
                 @error('password')
                     <p class="text-xs text-red-500 mt-0.5">{{ $message }}</p>
                 @enderror
-                <p class="text-[11px] text-[rgba(73,71,58,0.6)] mt-0.5">Minimal 8 karakter.</p>
+                <p class="text-[11px] text-[rgba(73,71,58,0.6)] mt-0.5">Minimal 8 characters.</p>
             </div>
 
             {{-- Confirm Password --}}

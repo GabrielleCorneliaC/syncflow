@@ -1,14 +1,14 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
 
 // ─────────────────────────────────────────────────────────
 //  GUEST ROUTES (hanya bisa diakses kalau BELUM login)
