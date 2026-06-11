@@ -9,6 +9,7 @@ use App\Http\Controllers\WorkspaceMemberController;
 use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
+use Illuminate\Support\Facades\Schedule;
 
 // ─────────────────────────────────────────────────────────
 //  GUEST ROUTES (hanya bisa diakses kalau BELUM login)
@@ -118,13 +119,23 @@ Route::middleware(['auth'])->group(function () {
     // ─────────────────────────────────────────────────────────────────────────
     // GROUP: TUGAS KEVIN DLL (Tetap di-comment agar tidak error)
     // ─────────────────────────────────────────────────────────────────────────
-    // Route::post('/workspaces/{workspace}/schedules', [CollaborativeScheduleController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy']);
-    // Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy']);
-    // Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show']);
-    // Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
-    // Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+    Route::post('/workspaces/{workspace}/schedules', [CollaborativeScheduleController::class, 'store']);
+    Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy']);
+    Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store']);
+    Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy']);
+    Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show']);
+    Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
+    Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
+    Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+
+    // Tambahan route 
+    Route::get('/workspaces/{workspace}/tasks-test', function($workspace) {
+    // Tarik data tugas dan user untuk ditampilkan di form
+    $tasks = \App\Models\CollaborativeTask::where('workspace_id', $workspace)->get();
+    $users = \App\Models\User::all();
+    return view('tasks.index', ['workspace_id' => $workspace, 'tasks' => $tasks, 'users' => $users]);
+});
+    // untuk cek tugas yang sudah overdue setiap jam
+    Schedule::command('tasks:check-overdue')->hourly();
     */
 });
