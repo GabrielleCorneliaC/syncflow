@@ -24,4 +24,9 @@ class CollaborativeTask extends Model
     {
         return $this->belongsTo(User::class, 'assignee_id');
     }
+
+    public function comments()
+{
+    return $this->hasMany(TaskComment::class);
+}
 }
