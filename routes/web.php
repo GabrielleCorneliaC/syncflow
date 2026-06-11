@@ -10,6 +10,7 @@ use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
 use Illuminate\Support\Facades\Schedule;
+use App\Http\Controllers\TaskCommentController;
 
 // ─────────────────────────────────────────────────────────
 //  GUEST ROUTES (hanya bisa diakses kalau BELUM login)
@@ -61,6 +62,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{user}',[ProfileController::class, 'adminDestroy'])->name('destroy');
     });
 
+    // ── Task Comments - Felita ───────────────────────────
+    Route::post('/task-comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
+    Route::put('/task-comments/{taskComment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
+    Route::delete('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+
+});
 
 /*
 // =========================================================================
@@ -74,11 +81,11 @@ Route::get('/login', function () {
 
 Route::get('/auto-login', function () {
     $user = \App\Models\User::find(1);
-    
+
     if (!$user) {
         return 'Gagal! Kamu harus buka phpMyAdmin dulu dan buat satu data manual di tabel "users" dengan ID = 1.';
     }
-    
+
     \Illuminate\Support\Facades\Auth::login($user);
     return redirect('/workspaces');
 });
@@ -103,7 +110,7 @@ Route::middleware(['auth'])->group(function () {
     // ─────────────────────────────────────────────────────────────────────────
     // GROUP: TUGAS GABRIELLE (Detail, Delete, Invite Workspace)
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     // 1. Rute untuk Admin & Collaborator (Hanya bisa melihat isi folder)
     Route::middleware(['workspace.role'])->group(function () {
         Route::get('/workspaces/{workspace_id}', [WorkspaceController::class, 'show'])->name('workspaces.show');
@@ -128,7 +135,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
     Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
 
-    // Tambahan route 
+    // Tambahan route
     Route::get('/workspaces/{workspace}/tasks-test', function($workspace) {
     // Tarik data tugas dan user untuk ditampilkan di form
     $tasks = \App\Models\CollaborativeTask::where('workspace_id', $workspace)->get();
@@ -137,5 +144,4 @@ Route::middleware(['auth'])->group(function () {
 });
     // untuk cek tugas yang sudah overdue setiap jam
     Schedule::command('tasks:check-overdue')->hourly();
-    */
-});
+*/

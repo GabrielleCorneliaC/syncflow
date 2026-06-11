@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\TaskComment;
+use Illuminate\Support\Facades\Storage;
 
 class TaskCommentController extends Controller
 {
@@ -18,9 +19,7 @@ class TaskCommentController extends Controller
         $attachmentPath = null;
 
         if ($request->hasFile('attachment')) {
-            $attachmentPath = $request
-                ->file('attachment')
-                ->store('task-comments', 'public');
+            $attachmentPath = $request->file('attachment')->store('task-comments', 'public');
         }
 
         $comment = TaskComment::create([
@@ -32,7 +31,52 @@ class TaskCommentController extends Controller
 
         return response()->json([
             'success' => true,
-            'comment' => $comment
+            'comment' => $comment->load('user')
+        ]);
+    }
+
+    public function update(Request $request, TaskComment $taskComment)
+    {
+        if ($taskComment->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'comment' => 'required|string',
+            'attachment' => 'nullable|file|max:10240'
+        ]);
+
+        if ($request->hasFile('attachment')) {
+            if ($taskComment->attachment_path) {
+                Storage::disk('public')->delete($taskComment->attachment_path);
+            }
+
+            $taskComment->attachment_path = $request->file('attachment')->store('task-comments', 'public');
+        }
+
+        $taskComment->comment = $data['comment'];
+        $taskComment->save();
+
+        return response()->json([
+            'success' => true,
+            'comment' => $taskComment->load('user')
+        ]);
+    }
+
+    public function destroy(TaskComment $taskComment)
+    {
+        if ($taskComment->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($taskComment->attachment_path) {
+            Storage::disk('public')->delete($taskComment->attachment_path);
+        }
+
+        $taskComment->delete();
+
+        return response()->json([
+            'success' => true
         ]);
     }
 }
