@@ -12,136 +12,67 @@ use App\Http\Controllers\ResourceLinkController;
 use Illuminate\Support\Facades\Schedule;
 use App\Http\Controllers\TaskCommentController;
 
-// ─────────────────────────────────────────────────────────
-//  GUEST ROUTES (hanya bisa diakses kalau BELUM login)
-// ─────────────────────────────────────────────────────────
-
 Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 
-    // ── Email / Password Auth ─────────────────────────────
-    Route::get('/login',   [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',  [AuthController::class, 'login'])->name('login.store');
-
-    Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 
-    // ── Google OAuth ──────────────────────────────────────
-    // Step 1: redirect ke Google consent screen
-    Route::get('/auth/google',          [AuthController::class, 'redirectToGoogle'])->name('auth.google');
-    // Step 2: callback dari Google setelah user mengizinkan
+    Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 });
 
-// ─────────────────────────────────────────────────────────
-//  AUTHENTICATED ROUTES (harus login dulu)
-// ─────────────────────────────────────────────────────────
-
 Route::middleware('auth')->group(function () {
-
-    // Root redirect ke dashboard
     Route::get('/', fn () => redirect()->route('dashboard'));
 
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ── Profil ────────────────────────────────────────────
     Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/',             [ProfileController::class, 'show'])->name('show');
-        Route::patch('/info',       [ProfileController::class, 'updateInfo'])->name('update.info');
-        Route::patch('/password',   [ProfileController::class, 'updatePassword'])->name('update.password');
-        Route::post('/avatar',      [ProfileController::class, 'updateAvatar'])->name('update.avatar');
-        Route::delete('/delete',    [ProfileController::class, 'destroy'])->name('destroy');
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::patch('/info', [ProfileController::class, 'updateInfo'])->name('update.info');
+        Route::patch('/password', [ProfileController::class, 'updatePassword'])->name('update.password');
+        Route::post('/avatar', [ProfileController::class, 'updateAvatar'])->name('update.avatar');
+        Route::delete('/delete', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    // ── Admin ─────────────────────────────────────────────
     Route::prefix('admin/users')->name('admin.users.')->middleware('can:admin')->group(function () {
-        Route::get('/',         [ProfileController::class, 'index'])->name('index');
-        Route::delete('/{user}',[ProfileController::class, 'adminDestroy'])->name('destroy');
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::delete('/{user}', [ProfileController::class, 'adminDestroy'])->name('destroy');
     });
 
-    // ── Task Comments - Felita ───────────────────────────
-    Route::post('/task-comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
-    Route::put('/task-comments/{taskComment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
-    Route::delete('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
-
-});
-
-/*
-// =========================================================================
-// JALAN PINTAS SEMENTARA (Ditaruh di LUAR area auth agar bisa diakses)
-// =========================================================================
-Route::get('/login', function () {
-    return '<h1>Halaman Login Belum Dibuat</h1>
-            <p>Klik tombol di bawah untuk masuk paksa ke sistem (Bypass).</p>
-            <a href="/auto-login" style="padding:10px; background:#C8216B; color:white; text-decoration:none; border-radius:5px;">Masuk Paksa (Auto-Login)</a>';
-})->name('login');
-
-Route::get('/auto-login', function () {
-    $user = \App\Models\User::find(1);
-
-    if (!$user) {
-        return 'Gagal! Kamu harus buka phpMyAdmin dulu dan buat satu data manual di tabel "users" dengan ID = 1.';
-    }
-
-    \Illuminate\Support\Facades\Auth::login($user);
-    return redirect('/workspaces');
-});
-// =========================================================================
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SEMUA ROUTE DI BAWAH INI DILINDUNGI auth (harus login)
-// ─────────────────────────────────────────────────────────────────────────────
-Route::middleware(['auth'])->group(function () {
-
-    // ── Daftar semua workspace milik / yang diikuti user ─────────────────────
+    // Workspaces - Gabrielle
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
-
-    // ── Buat workspace baru ───────────────────────────────────────────────────
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
-
-    // ── Proxy pencarian foto Unsplash ─────────────────────────────────────────
     Route::get('/api/unsplash/search', [WorkspaceController::class, 'unsplashSearch'])->name('api.unsplash.search');
 
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // GROUP: TUGAS GABRIELLE (Detail, Delete, Invite Workspace)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // 1. Rute untuk Admin & Collaborator (Hanya bisa melihat isi folder)
     Route::middleware(['workspace.role'])->group(function () {
         Route::get('/workspaces/{workspace_id}', [WorkspaceController::class, 'show'])->name('workspaces.show');
     });
 
-    // 2. Rute khusus Admin/Owner (Hapus & Undang Anggota)
     Route::middleware(['workspace.role:admin'])->group(function () {
         Route::delete('/workspaces/{workspace_id}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
+        Route::patch('/workspaces/{workspace_id}', [WorkspaceController::class, 'update'])->name('workspaces.update');
         Route::post('/workspaces/{workspace_id}/members', [WorkspaceController::class, 'invite'])->name('workspaces.members.store');
     });
 
+    // Task Comments - Felita
+    Route::post('/task-comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
+    Route::put('/task-comments/{taskComment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
+    Route::delete('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GROUP: TUGAS KEVIN DLL (Tetap di-comment agar tidak error)
-    // ─────────────────────────────────────────────────────────────────────────
-    Route::post('/workspaces/{workspace}/schedules', [CollaborativeScheduleController::class, 'store']);
-    Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy']);
-    Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store']);
-    Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy']);
-    Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show']);
-    Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
-    Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
-    Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+    // Collaborative features - masih di-comment sampai modul task/schedule/resource siap
+    // Route::post('/workspaces/{workspace_id}/tasks', [CollaborativeTaskController::class, 'store'])->name('workspaces.tasks.store');
+    // Route::get('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'show'])->name('workspaces.tasks.show');
+    // Route::patch('/workspaces/tasks/{task_id}/status', [CollaborativeTaskController::class, 'updateStatus'])->name('workspaces.tasks.updateStatus');
+    // Route::delete('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'destroy'])->name('workspaces.tasks.destroy');
 
-    // Tambahan route
-    Route::get('/workspaces/{workspace}/tasks-test', function($workspace) {
-    // Tarik data tugas dan user untuk ditampilkan di form
-    $tasks = \App\Models\CollaborativeTask::where('workspace_id', $workspace)->get();
-    $users = \App\Models\User::all();
-    return view('tasks.index', ['workspace_id' => $workspace, 'tasks' => $tasks, 'users' => $users]);
+    // Route::post('/workspaces/{workspace_id}/schedules', [CollaborativeScheduleController::class, 'store'])->name('workspaces.schedules.store');
+    // Route::delete('/workspaces/{workspace_id}/schedules/{schedule_id}', [CollaborativeScheduleController::class, 'destroy'])->name('workspaces.schedules.destroy');
+
+    // Route::post('/workspaces/{workspace_id}/resources', [ResourceLinkController::class, 'store'])->name('workspaces.resources.store');
+    // Route::delete('/workspaces/{workspace_id}/resources/{resource_id}', [ResourceLinkController::class, 'destroy'])->name('workspaces.resources.destroy');
+
+    // Schedule::command('tasks:check-overdue')->hourly();
 });
-    // untuk cek tugas yang sudah overdue setiap jam
-    Schedule::command('tasks:check-overdue')->hourly();
-*/
