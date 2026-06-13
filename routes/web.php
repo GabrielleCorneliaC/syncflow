@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\PersonalScheduleController;
+use App\Http\Controllers\PersonalTaskController;
 use App\Http\Controllers\WorkspaceMemberController;
 use App\Http\Controllers\CollaborativeTaskController;
 use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/', fn () => view('welcome'));
 
 // =========================================================================
 // JALAN PINTAS SEMENTARA (Ditaruh di LUAR area auth agar bisa diakses)
@@ -24,7 +29,7 @@ Route::get('/auto-login', function () {
     }
     
     \Illuminate\Support\Facades\Auth::login($user);
-    return redirect('/workspaces');
+    return redirect()->intended('/personal');
 });
 // =========================================================================
 
@@ -33,6 +38,19 @@ Route::get('/auto-login', function () {
 // SEMUA ROUTE DI BAWAH INI DILINDUNGI auth (harus login)
 // ─────────────────────────────────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
+    Route::get('/personal', [PersonalTaskController::class, 'index'])->name('personal.index');
+    Route::post('/personal/tasks', [PersonalTaskController::class, 'store'])->name('personal.tasks.store');
+    Route::put('/personal/tasks/{task}', [PersonalTaskController::class, 'update'])->name('personal.tasks.update');
+    Route::delete('/personal/tasks/{task}', [PersonalTaskController::class, 'destroy'])->name('personal.tasks.destroy');
+    Route::patch('/personal/tasks/{task}/status', [PersonalTaskController::class, 'updateStatus'])->name('personal.tasks.status');
+
+    Route::post('/personal/schedules', [PersonalScheduleController::class, 'store'])->name('personal.schedules.store');
+    Route::put('/personal/schedules/{schedule}', [PersonalScheduleController::class, 'update'])->name('personal.schedules.update');
+    Route::delete('/personal/schedules/{schedule}', [PersonalScheduleController::class, 'destroy'])->name('personal.schedules.destroy');
+    Route::get('/personal/schedules/events', [PersonalScheduleController::class, 'events'])->name('personal.schedules.events');
+
+    Route::get('/google-calendar/redirect', [GoogleCalendarController::class, 'redirect'])->name('google.calendar.redirect');
+    Route::get('/google-calendar/callback', [GoogleCalendarController::class, 'callback'])->name('google.calendar.callback');
 
     // ── Daftar semua workspace milik / yang diikuti user ─────────────────────
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');

@@ -27,6 +27,24 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'google_access_token' => 'encrypted',
+            'google_refresh_token' => 'encrypted',
+            'google_token_expires_at' => 'datetime',
         ];
+    }
+
+    public function personalTasks()
+    {
+        return $this->hasMany(PersonalTask::class);
+    }
+
+    public function personalSchedules()
+    {
+        return $this->hasMany(PersonalSchedule::class);
+    }
+
+    public function hasGoogleCalendarConnected(): bool
+    {
+        return filled($this->google_access_token) || filled($this->google_refresh_token);
     }
 }

@@ -38,4 +38,10 @@ return [
     'access_key' => env('QPKl4as7rD-IB1I-tnxlh4A7Nq8FAgRtdUgxcdQb7Pc'),
 ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
 ];

@@ -16,7 +16,7 @@ class WorkspaceController extends Controller
             $query->where('user_id', auth()->id());
         })->get();
 
-        return view('workspaces.index', compact('workspaces'));
+        return view('workspace.index', compact('workspaces'));
     }
 
     // CREATE — Buat workspace baru, otomatis jadikan creator sebagai Admin
@@ -42,7 +42,7 @@ class WorkspaceController extends Controller
     {
         $workspace = Workspace::with('members')->findOrFail($workspace_id);
         
-        return view('workspaces.show', compact('workspace')); // <-- pakai 's'
+        return view('workspace.show', compact('workspace'));
     }
 
     // UPDATE — Edit nama atau cover
