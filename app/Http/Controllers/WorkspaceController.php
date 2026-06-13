@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Workspace;
+// --- TAMBAHKAN IMPORT INI AGAR MODEL BISA DIBACA ---
+use App\Models\CollaborativeTask;
+use App\Models\CollaborativeSchedule;
+use App\Models\ResourceLink;
+// ----------------------------------------------------
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WorkspaceInvite as WorkspaceInviteMail;
@@ -61,20 +66,24 @@ class WorkspaceController extends Controller
     // READ — Tampilkan workspace beserta anggotanya
     public function show(int $workspace_id)
     {
+        // 1. Ambil workspace beserta relasinya
         $workspace = Workspace::with('members.user')->findOrFail($workspace_id);
 
-        $tasks = collect();
-        $schedules = collect();
-        $resources = collect();
+        // 2. AMBIL DATA DARI DATABASE
+        $tasks     = CollaborativeTask::where('workspace_id', $workspace_id)->get();
+        $schedules = CollaborativeSchedule::where('workspace_id', $workspace_id)->get();
+        $resources = ResourceLink::where('workspace_id', $workspace_id)->get();
 
-        // Determine if current user is an admin (owner) in this workspace
+        // 3. Cek apakah user adalah pemilik (owner)
         $member = $workspace->members->firstWhere('user_id', auth()->id());
         $isOwner = $member && $member->role === 'admin';
 
+        // 4. Kirim ke view
         return view('workspaces.show', compact('workspace', 'tasks', 'schedules', 'resources', 'isOwner'));
     }
+
     // UPDATE — Edit nama atau cover
-    public function update(Request $request, int $workspace_id) // <--- Ubah $id jadi $workspace_id
+    public function update(Request $request, int $workspace_id)
     {
         $workspace = Workspace::findOrFail($workspace_id);
         $request->validate([
@@ -88,7 +97,7 @@ class WorkspaceController extends Controller
     }
 
     // DELETE — Hanya admin (sudah dijaga middleware)
-    public function destroy(int $workspace_id) // <--- Ubah $id jadi $workspace_id
+    public function destroy(int $workspace_id)
     {
         Workspace::findOrFail($workspace_id)->delete();
         
@@ -103,7 +112,7 @@ class WorkspaceController extends Controller
         $workspace = Workspace::findOrFail($workspace_id);
 
         $email = $request->input('email');
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', )->first();
 
         if ($user) {
             if (! $workspace->members()->where('user_id', $user->id)->exists()) {
@@ -115,63 +124,60 @@ class WorkspaceController extends Controller
         }
 
         try {
-            Mail::to($email)->send(new WorkspaceInviteMail($workspace, $email));
+            // MATIKAN SEMENTARA BARIS INI SAMPAI TEMANMU MEMBUAT FILE-NYA
+            // Mail::to($request->email)->send(new \App\Mail\WorkspaceInviteMail($workspace, $request->email));
+            
+            // Tambahkan log simulasi agar kita tahu sistemnya sebenarnya berjalan
+            \Log::info('Simulasi undangan berhasil dikirim ke: ' . $request->email);
+
         } catch (\Exception $e) {
             \Log::error('Failed to send workspace invite: '.$e->getMessage());
             return back()->with('error', 'Gagal mengirim undangan. Silakan coba lagi.');
         }
 
-        return back()->with('success', 'Undangan berhasil dikirim ke: ' . $email);
+        // Kalau sukses, langsung reload halaman dan tutup modal otomatis tanpa kata-kata
+        return back();
     }
-
     // Proxy API Unsplash
-   public function unsplashSearch(Request $request)
-{
-    $query = $request->input('query', 'workspace');
-    $apiKey = env('UNSPLASH_ACCESS_KEY');
+    public function unsplashSearch(Request $request)
+    {
+        $query = $request->input('query', 'workspace');
+        $apiKey = env('UNSPLASH_ACCESS_KEY');
 
-    if (!$apiKey) {
-        return response()->json([
-            'error' => 'Unsplash API key not configured'
-        ], 500);
-    }
-
-    try {
-        $response = Http::withoutVerifying()->get(
-            'https://api.unsplash.com/search/photos',
-            [
-                'query' => $query,
-                'per_page' => 12,
-                'client_id' => $apiKey,
-            ]
-        );
-
-        if ($response->failed()) {
-            return response()->json([
-                'error' => 'Unsplash API error'
-            ], $response->status());
+        if (!$apiKey) {
+            return response()->json(['error' => 'Unsplash API key not configured'], 500);
         }
 
-        $images = $response->json()['results'] ?? [];
+        try {
+            $response = Http::withoutVerifying()->get(
+                'https://api.unsplash.com/search/photos',
+                [
+                    'query' => $query,
+                    'per_page' => 12,
+                    'client_id' => $apiKey,
+                ]
+            );
 
-        $results = collect($images)->map(function ($img) {
-            return [
-                'urls' => [
-                    'small'   => $img['urls']['small'] ?? $img['urls']['thumb'],
-                    'regular' => $img['urls']['regular'],
-                    'thumb'   => $img['urls']['thumb'],
-                ],
-                'alt_description' => $img['alt_description'] ?? '',
-            ];
-        });
+            if ($response->failed()) {
+                return response()->json(['error' => 'Unsplash API error'], $response->status());
+            }
 
-        return response()->json([
-            'results' => $results
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
+            $images = $response->json()['results'] ?? [];
+
+            $results = collect($images)->map(function ($img) {
+                return [
+                    'urls' => [
+                        'small'   => $img['urls']['small'] ?? $img['urls']['thumb'],
+                        'regular' => $img['urls']['regular'],
+                        'thumb'   => $img['urls']['thumb'],
+                    ],
+                    'alt_description' => $img['alt_description'] ?? '',
+                ];
+            });
+
+            return response()->json(['results' => $results]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
-}
 }

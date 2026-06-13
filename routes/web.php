@@ -63,16 +63,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
     // Collaborative features - masih di-comment sampai modul task/schedule/resource siap
-    // Route::post('/workspaces/{workspace_id}/tasks', [CollaborativeTaskController::class, 'store'])->name('workspaces.tasks.store');
-    // Route::get('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'show'])->name('workspaces.tasks.show');
-    // Route::patch('/workspaces/tasks/{task_id}/status', [CollaborativeTaskController::class, 'updateStatus'])->name('workspaces.tasks.updateStatus');
-    // Route::delete('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'destroy'])->name('workspaces.tasks.destroy');
+    Route::post('/workspaces/{workspace_id}/tasks', [CollaborativeTaskController::class, 'store'])->name('workspaces.tasks.store');
+    Route::get('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'show'])->name('workspaces.tasks.show');
+    Route::patch('/workspaces/tasks/{task_id}/status', [CollaborativeTaskController::class, 'updateStatusAjax'])->name('workspaces.tasks.updateStatus');
+    Route::delete('/workspaces/{workspace_id}/tasks/{task_id}', [CollaborativeTaskController::class, 'destroy'])->name('workspaces.tasks.destroy');
 
-    // Route::post('/workspaces/{workspace_id}/schedules', [CollaborativeScheduleController::class, 'store'])->name('workspaces.schedules.store');
-    // Route::delete('/workspaces/{workspace_id}/schedules/{schedule_id}', [CollaborativeScheduleController::class, 'destroy'])->name('workspaces.schedules.destroy');
+    Route::post('/workspaces/{workspace_id}/schedules', [CollaborativeScheduleController::class, 'store'])->name('workspaces.schedules.store');
+    Route::delete('/workspaces/{workspace_id}/schedules/{schedule_id}', [CollaborativeScheduleController::class, 'destroy'])->name('workspaces.schedules.destroy');
 
-    // Route::post('/workspaces/{workspace_id}/resources', [ResourceLinkController::class, 'store'])->name('workspaces.resources.store');
-    // Route::delete('/workspaces/{workspace_id}/resources/{resource_id}', [ResourceLinkController::class, 'destroy'])->name('workspaces.resources.destroy');
+    Route::post('/workspaces/{workspace_id}/resources', [ResourceLinkController::class, 'store'])->name('workspaces.resources.store');
+    Route::delete('/workspaces/{workspace_id}/resources/{resource_id}', [ResourceLinkController::class, 'destroy'])->name('workspaces.resources.destroy');
 
-    // Schedule::command('tasks:check-overdue')->hourly();
+    Route::post('/workspaces/{workspace_id}/members', [WorkspaceController::class, 'invite'])->name('workspaces.invite');
+    Schedule::command('tasks:check-overdue')->hourly();
 });
