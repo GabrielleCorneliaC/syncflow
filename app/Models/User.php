@@ -43,6 +43,13 @@ class User extends Authenticatable
         return $this->hasMany(PersonalSchedule::class);
     }
 
+    public function collaborativeTasks()
+    {
+        return $this->belongsToMany(CollaborativeTask::class, 'collaborative_task_assignees')
+            ->withPivot(['google_calendar_event_id', 'google_calendar_html_link'])
+            ->withTimestamps();
+    }
+
     public function hasGoogleCalendarConnected(): bool
     {
         return filled($this->google_access_token) || filled($this->google_refresh_token);

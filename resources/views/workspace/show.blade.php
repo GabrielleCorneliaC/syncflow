@@ -132,10 +132,12 @@
                         {{-- Assignees --}}
                         <td class="px-4 py-4">
                             <div class="flex items-center -space-x-1.5">
-                                @foreach($task->assignees->take(3) as $a)
+                                @forelse($task->assignees->take(3) as $a)
                                 <img src="{{ $a->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($a->name).'&size=28&background=C8216B&color=fff' }}"
                                      class="w-7 h-7 rounded-full border-2 border-white object-cover" title="{{ $a->name }}">
-                                @endforeach
+                                @empty
+                                <span class="text-xs text-gray-400">Belum di-assign</span>
+                                @endforelse
                             </div>
                         </td>
 
@@ -333,12 +335,15 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Assign ke</label>
-                <select name="assignee_id" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
+                <select name="assignee_ids[]" multiple size="4" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
                     <option value="">— Pilih anggota —</option>
                     @foreach($workspace->members as $member)
-                    <option value="{{ $member->id }}">{{ $member->name }}</option>
+                        @if($member->user)
+                        <option value="{{ $member->user_id }}">{{ $member->user->name }} ({{ $member->role }})</option>
+                        @endif
                     @endforeach
                 </select>
+                <p class="text-xs text-gray-400 mt-1">Tahan Ctrl untuk pilih beberapa anggota.</p>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Progress (%)</label>

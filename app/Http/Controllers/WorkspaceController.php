@@ -40,9 +40,18 @@ class WorkspaceController extends Controller
     // READ — Tampilkan workspace beserta anggotanya
     public function show($workspace_id) // <--- Ubah $id jadi $workspace_id
     {
-        $workspace = Workspace::with('members')->findOrFail($workspace_id);
+        $workspace = Workspace::with('members.user')->findOrFail($workspace_id);
+        $admin = $workspace->members->firstWhere('role', 'admin');
+        $workspace->setAttribute('owner_id', $admin?->user_id);
+
+        $tasks = $workspace->collaborativeTasks()
+            ->with('assignees')
+            ->latest()
+            ->paginate(10);
+        $schedules = collect();
+        $resources = collect();
         
-        return view('workspace.show', compact('workspace'));
+        return view('workspace.show', compact('workspace', 'tasks', 'schedules', 'resources'));
     }
 
     // UPDATE — Edit nama atau cover

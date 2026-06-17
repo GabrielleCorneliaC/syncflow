@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CollaborativeTask;
 use App\Models\PersonalSchedule;
 use App\Models\User;
 use Carbon\Carbon;
@@ -80,6 +81,47 @@ class GoogleCalendarService
             ->throw();
     }
 
+    public function syncCollaborativeTask(CollaborativeTask $task, User $user): ?array
+    {
+        if (! $task->deadline || ! $user->hasGoogleCalendarConnected()) {
+            return null;
+        }
+
+        $payload = $this->collaborativeTaskPayload($task);
+        $existingEventId = $task->assignees
+            ->firstWhere('id', $user->id)
+            ?->pivot
+            ?->google_calendar_event_id;
+
+        if ($existingEventId) {
+            return Http::withToken($this->validAccessToken($user))
+                ->put("https://www.googleapis.com/calendar/v3/calendars/primary/events/{$existingEventId}", $payload)
+                ->throw()
+                ->json();
+        }
+
+        return Http::withToken($this->validAccessToken($user))
+            ->post('https://www.googleapis.com/calendar/v3/calendars/primary/events', $payload)
+            ->throw()
+            ->json();
+    }
+
+    public function deleteCollaborativeTask(CollaborativeTask $task, User $user): void
+    {
+        $eventId = $task->assignees
+            ->firstWhere('id', $user->id)
+            ?->pivot
+            ?->google_calendar_event_id;
+
+        if (! $eventId || ! $user->hasGoogleCalendarConnected()) {
+            return;
+        }
+
+        Http::withToken($this->validAccessToken($user))
+            ->delete("https://www.googleapis.com/calendar/v3/calendars/primary/events/{$eventId}")
+            ->throw();
+    }
+
     private function validAccessToken(User $user): string
     {
         if ($user->google_access_token && optional($user->google_token_expires_at)->isFuture()) {
@@ -120,6 +162,25 @@ class GoogleCalendarService
             'end' => [
                 'dateTime' => $schedule->endDateTime()->toRfc3339String(),
                 'timeZone' => $timezone,
+            ],
+        ];
+    }
+
+    private function collaborativeTaskPayload(CollaborativeTask $task): array
+    {
+        $description = trim(($task->description ? $task->description."\n\n" : '')."Status: {$task->status}\nProgress: {$task->progress}%");
+
+        return [
+            'summary' => '[SyncFlow Task] '.$task->name,
+            'description' => $description,
+            'start' => [
+                'date' => $task->deadline->format('Y-m-d'),
+            ],
+            'end' => [
+                'date' => $task->calendarEndDate()->format('Y-m-d'),
+            ],
+            'reminders' => [
+                'useDefault' => true,
             ],
         ];
     }

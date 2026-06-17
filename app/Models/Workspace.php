@@ -14,11 +14,10 @@ class Workspace extends Model
         return $this->hasMany(WorkspaceMember::class);
     }
 
-    // // Relasi ke tabel collaborative_tasks
-    // public function collaborativeTasks()
-    // {
-    //     return $this->hasMany(CollaborativeTask::class);
-    // }
+    public function collaborativeTasks()
+    {
+        return $this->hasMany(CollaborativeTask::class);
+    }
 
     // // Relasi ke tabel collaborative_schedules
     // public function collaborativeSchedules()

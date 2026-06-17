@@ -85,8 +85,17 @@ Route::middleware(['auth'])->group(function () {
     // Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy']);
     // Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store']);
     // Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy']);
-    // Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show']);
-    // Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus']);
-    // Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store']);
-    // Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy']);
+    Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show'])->name('workspaces.tasks.show');
+    Route::patch('/workspaces/tasks/{task}/status', [CollaborativeTaskController::class, 'updateStatus'])->name('workspaces.tasks.status');
+    Route::post('/workspaces/{workspace}/tasks', [CollaborativeTaskController::class, 'store'])->name('workspaces.tasks.store');
+    Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy'])->name('workspaces.tasks.destroy');
+
+    Route::post('/workspaces/{workspace}/schedules', fn () => back()->with('warning', 'Fitur collaborative schedule belum aktif.'))->name('workspaces.schedules.store');
+    Route::delete('/workspaces/{workspace}/schedules/{schedule}', fn () => back()->with('warning', 'Fitur collaborative schedule belum aktif.'))->name('workspaces.schedules.destroy');
+    Route::post('/workspaces/{workspace}/resources', fn () => back()->with('warning', 'Fitur resource belum aktif.'))->name('workspaces.resources.store');
+    Route::delete('/workspaces/{workspace}/resources/{resource}', fn () => back()->with('warning', 'Fitur resource belum aktif.'))->name('workspaces.resources.destroy');
+
+
+
+    
 });
