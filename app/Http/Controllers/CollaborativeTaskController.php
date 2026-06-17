@@ -42,7 +42,7 @@ class CollaborativeTaskController extends Controller
 
         // Cari tugas berdasarkan ID
         $task = CollaborativeTask::findOrFail($id);
-        
+
         // Update dan simpan
         $task->status = $request->status;
         $task->save();
@@ -55,12 +55,25 @@ class CollaborativeTaskController extends Controller
         ]);
     }
 
+    // Menampilkan rincian tugas beserta daftar komentarnya
+    public function show($workspace_id, $task_id)
+    {
+        $task = CollaborativeTask::with(['comments.user'])
+            ->where('workspace_id', $workspace_id)
+            ->findOrFail($task_id);
+
+        return view('tasks.show', [
+            'task' => $task,
+            'workspace_id' => $workspace_id,
+        ]);
+    }
+
     // Hapus tugas dari workspace
     public function destroy($workspace_id, $id)
     {
         // Cari tugas berdasarkan ID
         $task = CollaborativeTask::where('workspace_id', $workspace_id)->findOrFail($id);
-        
+
         // Eksekusi penghapusan data
         $task->delete();
 
