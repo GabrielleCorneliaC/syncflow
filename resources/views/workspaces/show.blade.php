@@ -394,61 +394,51 @@
     {{-- ══════════════════════════════════════════
          PANEL: RESOURCE & LINK
     ══════════════════════════════════════════ --}}
+    {{-- ══════════════════════════════════════════
+         PANEL: RESOURCE & LINK
+    ══════════════════════════════════════════ --}}
     <div id="panel-resource" class="hidden">
 
-        <div class="flex items-center justify-between mb-5">
-            <p class="text-sm text-texthint">
-                <span class="font-semibold text-textsoft">{{ $resources->count() }}</span>
-                resource tersimpan
-            </p>
+        {{-- Toolbar (Add Resource Button di kiri sesuai desain) --}}
+        <div class="mb-6 flex items-center justify-between">
+            @if(!empty($isOwner))
             <button onclick="openAddResourceModal()"
                 class="flex items-center gap-2 text-sm font-semibold text-white
-                       px-4 py-2 rounded-xl
-                       bg-primary hover:bg-primary-dark
-                       shadow-[3px_3px_0px_#6a1452]
-                       active:translate-y-px active:shadow-[1px_1px_0_#6a1452]
-                       transition-all">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path d="M12 5v14M5 12h14"/>
+                       px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark
+                       shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
-                Add Resource
+                Add New Resource
             </button>
+            @else
+            <div></div> {{-- Spacer kalau guest --}}
+            @endif
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {{-- Grid Card Resource bentuk Folder --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             @forelse($resources as $resource)
-            <div class="bg-surface rounded-2xl p-4
-                        border border-border
-                        shadow-[2px_2px_0px_#cbc7b6]
-                        hover:shadow-[4px_4px_0px_#cbc7b6]
-                        hover:-translate-y-0.5
-                        transition-all group relative">
-
-                {{-- Options kebab --}}
-                <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="relative group mt-6">
+                
+                {{-- Options kebab (Pojok kanan atas) --}}
+                <div class="absolute top-4 right-4 z-40">
                     <div class="relative">
                         <button onclick="toggleResourceMenu({{ $resource->id }})"
-                            class="w-7 h-7 rounded-full flex items-center justify-center
-                                   text-texthint hover:bg-muted transition-colors">
-                            <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="5" r="1.5"/>
-                                <circle cx="12" cy="12" r="1.5"/>
-                                <circle cx="12" cy="19" r="1.5"/>
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-[#5c5c5c] hover:bg-black/5 transition-colors">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
                             </svg>
                         </button>
+                        
                         <div id="resource-menu-{{ $resource->id }}"
-                             class="hidden absolute right-0 top-8
-                                    bg-surface rounded-xl border border-border
-                                    shadow-[3px_3px_0px_#cbc7b6]
-                                    py-1 z-10 w-32">
-                            <button onclick="editResource({{ $resource->id }})"
-                                class="w-full text-left px-3 py-2 text-xs text-textsoft hover:bg-muted transition-colors">
+                             class="hidden absolute right-0 top-8 bg-white rounded-xl border border-border shadow-[3px_3px_0px_#cbc7b6] py-1 z-50 w-32">
+                            <button onclick="editResource({{ $resource->id }})" class="w-full text-left px-3 py-2 text-xs text-textsoft hover:bg-muted transition-colors">
                                 Edit
                             </button>
-                            <form action="{{ route('workspaces.resources.destroy', [$workspace->id, $resource->id]) }}" method="POST">
+                            <form action="{{ route('workspaces.resources.destroy', [$workspace->id ?? 1, $resource->id]) }}" method="POST">
                                 @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
+                                <button type="submit" class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
                                     Hapus
                                 </button>
                             </form>
@@ -456,62 +446,56 @@
                     </div>
                 </div>
 
-                <a href="{{ $resource->url }}" target="_blank" rel="noopener" class="block pr-8">
-                    {{-- Icon container pakai warna accent brand --}}
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-accent">
-                        @php
-                            $icon = 'link';
-                            if(str_contains($resource->url, 'drive.google'))  $icon = 'folder';
-                            elseif(str_contains($resource->url, 'docs.google') || str_contains($resource->url, 'sheet')) $icon = 'doc';
-                            elseif(str_contains($resource->url, 'figma'))     $icon = 'figma';
-                        @endphp
+                {{-- Tab Atas Folder --}}
+                <div class="absolute -top-[23px] left-[-1px] h-6 w-24 border-t border-l border-r border-[#d6a4a4] rounded-t-xl bg-[#ffb8b8] z-20"></div>
+
+                {{-- Body Utama Folder --}}
+                <div class="relative z-10 w-full bg-[#ffb8b8] border border-[#d6a4a4] rounded-b-xl rounded-tr-xl p-5 flex flex-col h-[210px] shadow-[2px_2px_0px_#d6a4a4]">
+                    {{-- Trik CSS menutupi border bawah tab --}}
+                    <div class="absolute top-0 left-[1px] h-[2px] w-[94px] bg-[#ffb8b8] -translate-y-[1px] z-20"></div>
+
+                    {{-- Icon Berdasarkan URL --}}
+                    @php
+                        $icon = 'link';
+                        if(str_contains($resource->url, 'drive.google'))  $icon = 'folder';
+                        elseif(str_contains($resource->url, 'docs.google') || str_contains($resource->url, 'sheet')) $icon = 'doc';
+                        elseif(str_contains($resource->url, 'figma'))     $icon = 'figma';
+                    @endphp
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-3 text-primary shadow-sm relative z-30">
                         @if($icon === 'folder')
-                        <svg width="18" height="18" fill="none" stroke="#b30084" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
-                        </svg>
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
                         @elseif($icon === 'doc')
-                        <svg width="18" height="18" fill="none" stroke="#b30084" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                        </svg>
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        @elseif($icon === 'figma')
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 5.5A3.5 3.5 0 018.5 2H12v7H8.5A3.5 3.5 0 015 5.5z"/><path d="M12 2h3.5a3.5 3.5 0 110 7H12V2z"/><path d="M12 9h3.5a3.5 3.5 0 110 7H12V9z"/><path d="M5 12.5A3.5 3.5 0 018.5 9H12v7H8.5A3.5 3.5 0 015 12.5z"/><path d="M8.5 16A3.5 3.5 0 108.5 23 3.5 3.5 0 0012 19.5V16H8.5z"/></svg>
                         @else
-                        <svg width="18" height="18" fill="none" stroke="#b30084" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-                            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-                        </svg>
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
                         @endif
                     </div>
 
-                  <h3 class="font-semibold text-textmain text-sm mb-1 break-words">
-                    {{ $resource->title }}
-                </h3>
-                <p class="text-xs text-texthint mb-3 leading-relaxed line-clamp-2">
-                    {{ $resource->description }}
-                </p>
-                    <span class="flex items-center justify-center gap-1.5 w-full py-2
-                                  rounded-xl text-xs font-semibold
-                                  bg-accent text-primary
-                                  hover:bg-primary hover:text-white
-                                  transition-all">
+                    {{-- Text --}}
+                    <h3 class="font-bold text-[#3a3a3a] text-sm mb-1.5 line-clamp-1 relative z-30">{{ $resource->title }}</h3>
+                    <p class="text-[11px] text-[#5a5a5a] leading-relaxed line-clamp-3 mb-auto relative z-30">
+                        {{ $resource->description }}
+                    </p>
+
+                    {{-- Open Link Button --}}
+                    <a href="{{ $resource->url }}" target="_blank" rel="noopener" 
+                       class="mt-4 flex items-center justify-center gap-1.5 w-full py-2 bg-white border border-[#d6a4a4] rounded-lg text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors relative z-30">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                            <polyline points="15 3 21 3 21 9"/>
-                            <line x1="10" y1="14" x2="21" y2="3"/>
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
                         </svg>
                         Open Link
-                    </span>
-                </a>
+                    </a>
+                </div>
             </div>
             @empty
             <div class="col-span-full text-center py-12">
-                <svg class="w-10 h-10 mx-auto mb-3 text-border" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                <svg class="w-10 h-10 mx-auto mb-3 text-[#d6a4a4]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
-                <p class="text-sm text-texthint">
-                    Belum ada resource. Tambahkan link atau dokumen penting!
+                <p class="text-sm text-[#8a8a8a] font-medium">
+                    Belum ada resource tersimpan.
                 </p>
             </div>
             @endforelse

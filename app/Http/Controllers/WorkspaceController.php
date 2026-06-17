@@ -19,6 +19,7 @@ class WorkspaceController extends Controller
     // READ — Tampilkan daftar semua workspace di halaman utama
     public function index() 
     {
+
         // Ambil semua workspace di mana user saat ini menjadi anggota
         $all = Workspace::whereHas('members', function($query) {
             $query->where('user_id', auth()->id());
