@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Komentar Tugas</title>
+    <title>Task Comments</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -64,7 +64,7 @@
                                         <a href="{{ asset('storage/' . $comment->attachment_path) }}"
                                           download
                                            class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
-                                            📄 Download Lampiran
+                                            📄 Download Attachment
                                         </a>
                                     </div>
                                 @endif
@@ -73,7 +73,7 @@
                     </div>
                 @empty
                     <div id="empty-comment" class="h-full flex items-center justify-center text-sm text-gray-400">
-                        Belum ada komentar.
+                        No comments yet.
                     </div>
                 @endforelse
             </div>
@@ -85,12 +85,27 @@
 
                 <div class="flex flex-col md:flex-row md:items-end gap-4">
                     <div class="flex-1">
-                        <textarea name="comment" rows="2" required
-                            placeholder="Ketikkan sesuatu ..."
-                            class="w-full border border-gray-300 rounded-2xl px-5 py-4 text-sm resize-none focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100"></textarea>
+                        <div id="textarea-wrapper"
+                             class="w-full border border-gray-300 rounded-2xl px-5 py-3 focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-100 transition">
 
-                        <input type="file" name="attachment"
-                            class="mt-3 block text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-pink-50 file:text-pink-700 file:font-semibold">
+                            <div id="file-preview" class="hidden items-center gap-2 mb-2 bg-pink-50 border border-pink-100 rounded-xl px-3 py-2">
+                                <span class="text-sm">📎</span>
+                                <span id="file-preview-name" class="text-xs font-medium text-gray-700 truncate flex-1"></span>
+                                <button type="button" id="remove-file-btn"
+                                        class="text-gray-400 hover:text-pink-600 text-sm font-bold leading-none px-1">
+                                    ×
+                                </button>
+                            </div>
+
+                            <textarea name="comment" rows="2"
+                                placeholder="Type something ..."
+                                class="w-full text-sm resize-none focus:outline-none border-0 p-0"></textarea>
+                        </div>
+
+                        <label class="mt-3 inline-flex items-center gap-2 text-xs text-pink-700 font-semibold bg-pink-50 px-4 py-2 rounded-xl cursor-pointer hover:bg-pink-100 transition">
+                            📎 Choose File
+                            <input type="file" name="attachment" id="attachment-input" class="hidden">
+                        </label>
                     </div>
 
                     <button type="submit"
@@ -110,29 +125,69 @@
 <script>
 const form = document.getElementById('comment-form');
 const textarea = form.querySelector('textarea[name="comment"]');
+const fileInput = document.getElementById('attachment-input');
 const commentList = document.getElementById('comment-list');
+const filePreview = document.getElementById('file-preview');
+const filePreviewName = document.getElementById('file-preview-name');
+const removeFileBtn = document.getElementById('remove-file-btn');
 
-// Enter = kirim, Shift+Enter = baris baru
-textarea.addEventListener('keydown', function(e) {
+function showFilePreview(file) {
+    filePreviewName.textContent = file.name;
+    filePreview.classList.remove('hidden');
+    filePreview.classList.add('flex');
+}
+
+function clearFilePreview() {
+    fileInput.value = '';
+    filePreview.classList.add('hidden');
+    filePreview.classList.remove('flex');
+    filePreviewName.textContent = '';
+}
+
+fileInput.addEventListener('change', function () {
+    if (this.files.length > 0) {
+        showFilePreview(this.files[0]);
+    } else {
+        clearFilePreview();
+    }
+    textarea.focus();
+});
+
+removeFileBtn.addEventListener('click', function () {
+    clearFilePreview();
+});
+
+textarea.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
 
-        if (this.value.trim() !== '') {
+        if (this.value.trim() !== '' || fileInput.files.length > 0) {
             form.requestSubmit();
         }
     }
 });
 
-form.addEventListener('submit', async function(e) {
+form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    if (textarea.value.trim() === '' && fileInput.files.length === 0) {
+        return;
+    }
+
     const formData = new FormData(form);
+    const submitButton = form.querySelector('button[type="submit"]');
+    const statusText = document.getElementById('comment-status');
+
+    submitButton.disabled = true;
+    statusText.className = 'mt-3 text-xs font-semibold text-gray-400';
+    statusText.textContent = 'Sending comment...';
+    statusText.classList.remove('hidden');
 
     try {
         const response = await fetch("{{ route('task-comments.store') }}", {
             method: "POST",
             headers: {
-                "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value,
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 "Accept": "application/json"
             },
             body: formData
@@ -140,75 +195,66 @@ form.addEventListener('submit', async function(e) {
 
         const data = await response.json();
 
-        if (data.success) {
-
-            // hapus tulisan "Belum ada komentar."
-            const emptyComment = document.getElementById('empty-comment');
-            if (emptyComment) {
-                emptyComment.remove();
-            }
-
-            const comment = data.comment;
-
-            let attachmentHtml = '';
-
-            if (comment.attachment_path) {
-                attachmentHtml = `
-                    <div class="mt-3">
-                        <a href="/storage/${comment.attachment_path}"
-                        download
-                        class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
-                            📄 Download Lampiran
-                        </a>
-                    </div>
-                `;
-            }
-
-            const item = document.createElement('div');
-            item.className = 'flex gap-3';
-
-            item.innerHTML = `
-                <img
-                    src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user?.name ?? 'User')}&size=40&background=C8216B&color=fff"
-                    class="w-10 h-10 rounded-full object-cover">
-
-                <div>
-                    <div class="flex items-center gap-3 mb-1">
-                        <span class="text-xs font-semibold text-gray-700">
-                            ${comment.user?.name ?? 'User'}
-                        </span>
-
-                        <span class="text-xs text-gray-400">
-                            Baru saja
-                        </span>
-                    </div>
-
-                    <div class="bg-pink-50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-700 max-w-md">
-                        ${comment.comment}
-
-                        ${attachmentHtml}
-                    </div>
-                </div>
-            `;
-
-            commentList.appendChild(item);
-
-            // scroll ke komentar terbaru
-            commentList.scrollTop = commentList.scrollHeight;
-
-            // reset form
-            form.reset();
-
-            // fokus kembali ke textarea
-            textarea.focus();
-
-        } else {
-            alert(data.message || 'Komentar gagal dikirim.');
+        if (!response.ok || !data.success) {
+            throw new Error('Failed to send comment');
         }
 
+        const emptyComment = document.getElementById('empty-comment');
+        if (emptyComment) emptyComment.remove();
+
+        const comment = data.comment;
+
+        const commentText = comment.comment
+            ? `<p class="leading-relaxed">${comment.comment}</p>`
+            : `<p class="leading-relaxed text-gray-500 italic">Sending attachment.</p>`;
+
+        const attachmentHtml = comment.attachment_path
+            ? `
+                <div class="mt-3">
+                    <a href="/storage/${comment.attachment_path}"
+                       download
+                       class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
+                        📄 Download Attachment
+                    </a>
+                </div>
+              `
+            : '';
+
+        const item = document.createElement('div');
+        item.className = 'flex gap-3';
+        item.innerHTML = `
+            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user?.name ?? 'User')}&size=40&background=C8216B&color=fff"
+                 class="w-10 h-10 rounded-full object-cover border border-white shadow-sm">
+
+            <div class="max-w-[75%]">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="text-xs font-semibold text-gray-700">${comment.user?.name ?? 'User'}</span>
+                    <span class="text-xs text-gray-400">Just now</span>
+                </div>
+
+                <div class="rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-700 shadow-sm"
+                     style="background:#FCE8F1;">
+                    ${commentText}
+                    ${attachmentHtml}
+                </div>
+            </div>
+        `;
+
+        commentList.appendChild(item);
+        commentList.scrollTop = commentList.scrollHeight;
+
+        form.reset();
+        clearFilePreview();
+        textarea.focus();
+
+        statusText.className = 'mt-3 text-xs font-semibold text-green-600';
+        statusText.textContent = 'Comment sent successfully.';
     } catch (error) {
         console.error(error);
-        alert('Terjadi kesalahan saat mengirim komentar.');
+        statusText.className = 'mt-3 text-xs font-semibold text-red-600';
+        statusText.textContent = 'Failed to send comment. Try again.';
+    } finally {
+        submitButton.disabled = false;
     }
 });
 </script>
