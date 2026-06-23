@@ -58,6 +58,15 @@
             </div>
 
             <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Timezone</label>
+                <select name="timezone" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
+                    @foreach(['Asia/Jakarta' => 'WIB', 'Asia/Makassar' => 'WITA', 'Asia/Jayapura' => 'WIT'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('timezone', $schedule?->timezone ?? 'Asia/Jakarta') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location</label>
                 <input type="text" name="location" value="{{ old('location', $schedule?->location) }}"
                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">

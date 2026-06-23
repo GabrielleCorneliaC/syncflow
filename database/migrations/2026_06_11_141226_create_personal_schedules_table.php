@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('time');
             $table->time('end_time')->nullable();
+            $table->string('timezone')->default('Asia/Jakarta');
             $table->string('location')->nullable();
             $table->string('google_calendar_event_id')->nullable();
             $table->string('google_calendar_html_link')->nullable();

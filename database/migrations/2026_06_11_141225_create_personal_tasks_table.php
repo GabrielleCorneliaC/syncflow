@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->string('status')->default('pending');
             $table->unsignedTinyInteger('progress')->default(0);
+            $table->unsignedTinyInteger('progress_before_completed')->nullable();
             $table->timestamps();
         });
     }

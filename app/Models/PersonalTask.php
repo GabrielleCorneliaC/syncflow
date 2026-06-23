@@ -13,6 +13,7 @@ class PersonalTask extends Model
         'due_date',
         'status',
         'progress',
+        'progress_before_completed',
     ];
 
     protected function casts(): array
@@ -20,6 +21,7 @@ class PersonalTask extends Model
         return [
             'due_date' => 'date',
             'progress' => 'integer',
+            'progress_before_completed' => 'integer',
         ];
     }
 

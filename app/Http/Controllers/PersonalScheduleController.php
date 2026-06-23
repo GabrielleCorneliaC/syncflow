@@ -73,6 +73,7 @@ class PersonalScheduleController extends Controller
             'date' => ['required', 'date'],
             'time' => ['required', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i', 'after:time'],
+            'timezone' => ['required', 'in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura'],
             'location' => ['nullable', 'string', 'max:255'],
         ]);
     }

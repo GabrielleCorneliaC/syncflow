@@ -14,6 +14,7 @@ class PersonalSchedule extends Model
         'date',
         'time',
         'end_time',
+        'timezone',
         'location',
         'google_calendar_event_id',
         'google_calendar_html_link',
@@ -33,15 +34,24 @@ class PersonalSchedule extends Model
 
     public function startDateTime(): Carbon
     {
-        return Carbon::parse($this->date->format('Y-m-d').' '.$this->time);
+        return Carbon::parse($this->date->format('Y-m-d').' '.$this->time, $this->timezone ?? 'Asia/Jakarta');
     }
 
     public function endDateTime(): Carbon
     {
         if ($this->end_time) {
-            return Carbon::parse($this->date->format('Y-m-d').' '.$this->end_time);
+            return Carbon::parse($this->date->format('Y-m-d').' '.$this->end_time, $this->timezone ?? 'Asia/Jakarta');
         }
 
         return $this->startDateTime()->copy()->addHour();
+    }
+
+    public function timezoneLabel(): string
+    {
+        return match ($this->timezone) {
+            'Asia/Makassar' => 'WITA',
+            'Asia/Jayapura' => 'WIT',
+            default => 'WIB',
+        };
     }
 }

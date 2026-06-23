@@ -149,7 +149,7 @@ class GoogleCalendarService
 
     private function eventPayload(PersonalSchedule $schedule): array
     {
-        $timezone = config('app.timezone', 'UTC');
+        $timezone = $schedule->timezone ?: 'Asia/Jakarta';
 
         return [
             'summary' => $schedule->title,

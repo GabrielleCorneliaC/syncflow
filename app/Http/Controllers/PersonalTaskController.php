@@ -72,10 +72,21 @@ class PersonalTaskController extends Controller
             'completed' => ['required', 'boolean'],
         ]);
 
-        $task->update([
-            'status' => $validated['completed'] ? 'completed' : 'pending',
-            'progress' => $validated['completed'] ? 100 : min($task->progress, 99),
-        ]);
+        if ($validated['completed']) {
+            $task->update([
+                'status' => 'completed',
+                'progress_before_completed' => $task->status === 'completed'
+                    ? ($task->progress_before_completed ?? 0)
+                    : $task->progress,
+                'progress' => 100,
+            ]);
+        } else {
+            $task->update([
+                'status' => 'pending',
+                'progress' => $task->progress_before_completed ?? 0,
+                'progress_before_completed' => null,
+            ]);
+        }
 
         return response()->json([
             'id' => $task->id,

@@ -96,8 +96,9 @@
                                         </button>
                                         <form action="{{ route('personal.tasks.destroy', $task) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-50 text-gray-400 hover:text-red-500">
+                                            <button id="task-delete-{{ $task->id }}" class="{{ $task->status === 'completed' ? 'px-3' : 'w-8' }} h-8 rounded-lg flex items-center justify-center gap-1 hover:bg-red-50 text-gray-400 hover:text-red-500">
                                                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                                <span class="task-delete-label text-xs font-semibold {{ $task->status === 'completed' ? '' : 'hidden' }}">Delete</span>
                                             </button>
                                         </form>
                                     </div>
@@ -142,6 +143,7 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase">Date</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase">Time</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase">Location</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase">Zone</th>
                         <th class="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase">Action</th>
                     </tr>
                 </thead>
@@ -157,6 +159,7 @@
                             <td class="px-4 py-4 text-gray-600">{{ $schedule->date->format('d M Y') }}</td>
                             <td class="px-4 py-4 text-gray-600">{{ $schedule->time }}{{ $schedule->end_time ? ' - '.$schedule->end_time : '' }}</td>
                             <td class="px-4 py-4 text-gray-600">{{ $schedule->location ?: '-' }}</td>
+                            <td class="px-4 py-4 text-gray-600">{{ $schedule->timezoneLabel() }}</td>
                             <td class="px-5 py-4">
                                 <div class="flex justify-end gap-2">
                                     <button onclick="openModal('schedule-edit-modal-{{ $schedule->id }}')" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-pink-50 text-gray-400 hover:text-pink-600">
@@ -172,7 +175,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center py-12 text-gray-400">Belum ada personal schedule.</td></tr>
+                        <tr><td colspan="6" class="text-center py-12 text-gray-400">Belum ada personal schedule.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -236,6 +239,8 @@
                 const progressBar = document.getElementById(`task-progress-bar-${taskId}`);
                 const progressText = document.getElementById(`task-progress-text-${taskId}`);
                 const title = document.querySelector(`#task-row-${taskId} .task-title`);
+                const deleteButton = document.getElementById(`task-delete-${taskId}`);
+                const deleteLabel = deleteButton?.querySelector('.task-delete-label');
 
                 status.textContent = data.status.replace('_', ' ');
                 status.className = data.status === 'completed'
@@ -246,6 +251,9 @@
                 progressText.textContent = `${data.progress}%`;
                 title.classList.toggle('line-through', data.status === 'completed');
                 title.classList.toggle('text-gray-400', data.status === 'completed');
+                deleteButton?.classList.toggle('w-8', data.status !== 'completed');
+                deleteButton?.classList.toggle('px-3', data.status === 'completed');
+                deleteLabel?.classList.toggle('hidden', data.status !== 'completed');
             } catch (error) {
                 input.checked = previous;
                 alert('Gagal memperbarui status task.');
