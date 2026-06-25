@@ -85,6 +85,70 @@ class CollaborativeTaskController extends Controller
             ->with('success', 'Task berhasil dibuat dan dikirim ke Google Calendar.');
     }
 
+    public function update(Request $request, Workspace $workspace, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
+    {
+        abort_unless($task->workspace_id === $workspace->id, 404);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'deadline' => ['nullable', 'string'], 
+            'status' => ['required', 'in:todo,pending,review,done,overdue'],
+            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'assignee_ids' => ['nullable', 'array'],
+            'assignee_ids.*' => ['integer', 'exists:users,id'],
+            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $assigneeIds = collect($validated['assignee_ids'] ?? [])
+            ->when(isset($validated['assignee_id']), fn ($ids) => $ids->push($validated['assignee_id']))
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Cari ID member + Owner yang sah di workspace ini
+        $allowedUserIds = DB::table('workspace_members')
+            ->where('workspace_id', $workspace->id)
+            ->pluck('user_id')
+            ->filter()
+            ->unique();
+
+        // Saring assignee
+        if ($assigneeIds->isEmpty() && auth()->check()) {
+            $assigneeIds->push(auth()->id());
+        } else {
+            $assigneeIds = $assigneeIds->intersect($allowedUserIds)->values();
+            if ($assigneeIds->isEmpty() && auth()->check()) {
+                $assigneeIds->push(auth()->id());
+            }
+        }
+
+        DB::transaction(function () use ($task, $validated, $assigneeIds, $request) {
+            $deadlineFormat = null;
+            if ($request->filled('deadline')) {
+                $cleanDeadline = str_replace('T', ' ', $validated['deadline']);
+                $deadlineFormat = Carbon::parse($cleanDeadline)->toDateTimeString();
+            }
+
+            $task->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'deadline' => $deadlineFormat,
+                'status' => $validated['status'],
+                'progress' => $validated['progress'],
+            ]);
+
+            $task->assignees()->sync($assigneeIds->all());
+        });
+
+        // Sinkronisasi ulang ke Google Calendar
+        $this->syncAssigneeCalendars($task->load('assignees'), $googleCalendar);
+
+        return redirect()
+            ->route('workspaces.show', ['workspace' => $workspace->id])
+            ->with('success', 'Tugas berhasil diperbarui.');
+    }
+
     public function updateStatus(Request $request, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
     {
         $validated = $request->validate([

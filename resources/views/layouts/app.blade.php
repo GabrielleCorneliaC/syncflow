@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — SyncFlow</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}?v=3">
 
     {{-- Google Fonts: Montserrat + Inter --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,7 +79,7 @@
     @stack('head')
 </head>
 
-<body class="h-full min-h-screen bg-[#fffce8]" x-data="{ sidebarOpen: false }">
+<body class="h-full min-h-full bg-[#fffce8]" x-data="{ sidebarOpen: false }">
 
 {{-- ══════════════════════════════════════════════════
      OVERLAY (mobile sidebar backdrop)
@@ -148,7 +148,7 @@
         </a>
 
         {{-- Personal List --}}
-        <a href="#"
+        <a href="{{ route('personal.index') }}"
            class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition
                   {{ request()->routeIs('personal.*') ? 'nav-active' : '' }}">
             <svg class="w-[15px] h-[15px] shrink-0 text-[#49473a]" viewBox="0 0 15 15" fill="none">
@@ -161,13 +161,13 @@
         <a href="{{ route('workspaces.index') }}"
         class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition
                 {{ request()->routeIs('workspaces.*') ? 'nav-active' : '' }}">
-            <svg class="w-[18px] h-[13px] shrink-0 text-[#767135]" viewBox="0 0 18 13" fill="none">
+            <svg class="w-[18px] h-[13px] shrink-0 text-[#49473a]" viewBox="0 0 18 13" fill="none">
                 <circle cx="6" cy="4.5" r="3" stroke="currentColor" stroke-width="1.3"/>
                 <circle cx="13" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.3"/>
                 <path d="M1 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
                 <path d="M13.5 7.5c2.21 0 4 1.79 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
             </svg>
-            <span class="font-poppins font-medium text-[#767135] text-base leading-6">Collaboration</span>
+            <span class="font-poppins font-medium text-[#49473a] text-base leading-6">Collaboration</span>
         </a>
         {{-- Profile --}}
         <a href="{{ route('profile.show') }}"
@@ -205,7 +205,7 @@
         btn: bg #b30084 · shadow [4px_4px_0_#6a1452] · rounded-[8px]
         icon + / "New" · Poppins Medium 16px white
     --}}
-    <div class="shrink-0 border-t border-[#cbc7b6] py-6 px-3">
+    <!-- <div class="shrink-0 border-t border-[#cbc7b6] py-6 px-3">
         <button class="w-full flex items-center justify-center gap-2
                        bg-[#b30084] hover:bg-[#8c0067]
                        shadow-[4px_4px_0px_#6a1452]
@@ -217,7 +217,49 @@
             </svg>
             <span>New</span>
         </button>
+    </div> -->
+    {{-- Sembunyikan tombol jika sedang berada di halaman workspaces --}}
+    @unless(request()->routeIs('workspaces.*'))
+    <div class="relative shrink-0 border-t border-[#cbc7b6] py-6 px-3" x-data="{ openMenu: false }">
+
+        {{-- Pop-up Menu Pilihan (Muncul melayang di atas tombol) --}}
+        <div x-show="openMenu" @click.outside="openMenu = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-2"
+             class="absolute bottom-[84px] left-3 right-3 bg-white border border-[#cbc7b6] rounded-xl shadow-[0px_-4px_12px_rgba(0,0,0,0.05)] py-2 z-50">
+
+            {{-- Pilihan 1: Buka Modal Tugas --}}
+            <button @click="openMenu = false; openModal('modal-add-task')"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#fdf9f0] font-poppins font-medium text-sm text-[#49473a] transition">
+                Tambah Tugas
+            </button>
+
+            {{-- Pilihan 2: Buka Modal Jadwal --}}
+            <button @click="openMenu = false; openModal('modal-add-schedule')"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#fdf9f0] font-poppins font-medium text-sm text-[#49473a] transition">
+                Tambah Jadwal
+            </button>
+        </div>
+
+        {{-- Tombol Utama + New --}}
+        <button @click="openMenu = !openMenu"
+                class="w-full flex items-center justify-center gap-2
+                       bg-[#b30084] hover:bg-[#8c0067]
+                       shadow-[4px_4px_0px_#6a1452]
+                       rounded-lg py-3
+                       font-poppins font-medium text-white text-base leading-6
+                       transition active:translate-y-px active:shadow-[2px_2px_0_#6a1452]">
+            <svg class="w-[14px] h-[14px] shrink-0" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1v12M1 7h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>New</span>
+        </button>
     </div>
+    @endunless
 </aside>
 
 {{-- ══ MAIN WRAPPER ════════════════════════════════════════════ --}}
@@ -278,6 +320,35 @@
     </main>
 </div>
 
+{{-- Taruh di paling bawah app.blade.php sebelum </body> --}}
+    <x-personal-task-modal 
+        id="modal-add-task" 
+        title="Tambah Tugas Baru" 
+        action="{{ route('personal.tasks.store') }}" 
+    />
+
+    <x-personal-schedule-modal 
+        id="modal-add-schedule" 
+        title="Tambah Jadwal Baru" 
+        action="{{ route('personal.schedules.store') }}" 
+    />
+
 @stack('scripts')
+
+<script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+</script>
 </body>
 </html>

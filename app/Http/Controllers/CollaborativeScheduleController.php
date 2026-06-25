@@ -2,133 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CollaborativeTask;
-use App\Models\User;
+use App\Models\CollaborativeSchedule;
 use App\Models\Workspace;
 use App\Services\GoogleCalendarService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Throwable;
 
-class CollaborativeTaskController extends Controller
+class CollaborativeScheduleController extends Controller
 {
-    public function show(Workspace $workspace, CollaborativeTask $task)
-    {
-        abort_unless($task->workspace_id === $workspace->id, 404);
-
-        return back();
-    }
-
     public function store(Request $request, Workspace $workspace, GoogleCalendarService $googleCalendar)
     {
+        // 1. Validasi input yang masuk (Harus sesuai dengan name di form Modal Add Schedule)
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'deadline' => ['nullable', 'date'],
-            'status' => ['required', 'in:todo,pending,review,done,overdue'],
-            'progress' => ['required', 'integer', 'min:0', 'max:100'],
-            'assignee_ids' => ['nullable', 'array'],
-            'assignee_ids.*' => ['integer', 'exists:users,id'],
-            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
+            'start_time' => ['required', 'string'],
+            'end_time' => ['required', 'string'],
         ]);
 
-        // Kumpulkan data assignee dari input array maupun single input
-        $assigneeIds = collect($validated['assignee_ids'] ?? [])
-            ->when(isset($validated['assignee_id']), fn ($ids) => $ids->push($validated['assignee_id']))
-            ->filter()
-            ->unique()
-            ->values();
+        // 2. Bersihkan format jam bawaan HTML5 (agar aman dibaca database)
+        $startFormat = Carbon::parse(str_replace('T', ' ', $validated['start_time']))->toDateTimeString();
+        $endFormat = Carbon::parse(str_replace('T', ' ', $validated['end_time']))->toDateTimeString();
 
-        // Ambil ID dari tabel workspace_members untuk validasi kepesertaan kelompok
-        $workspaceMemberIds = DB::table('workspace_members')
-            ->where('workspace_id', $workspace->id)
-            ->pluck('user_id');
+        // 3. Simpan jadwal ke database
+        $schedule = $workspace->collaborativeSchedules()->create([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'start_time' => $startFormat,
+            'end_time' => $endFormat,
+        ]);
 
-        // Saring assignee: Pastikan user yang dipilih memang terdaftar di workspace tersebut
-        if ($workspaceMemberIds->isNotEmpty()) {
-            $assigneeIds = $assigneeIds->intersect($workspaceMemberIds)->values();
+        // 4. Sinkronisasi ke Google Calendar milik pembuat
+        try {
+            $googleCalendar->syncCollaborativeSchedule($schedule, auth()->user());
+        } catch (Throwable $exception) {
+            report($exception);
+            session()->flash('warning', 'Jadwal tersimpan, tetapi Google Calendar gagal disinkronkan.');
         }
-
-        // Jika setelah disaring ternyata kosong, paksa masukkan user yang sedang login agar tidak error required kosong
-        if ($assigneeIds->isEmpty() && auth()->check()) {
-            $assigneeIds->push(auth()->id());
-        }
-
-        $task = DB::transaction(function () use ($workspace, $validated, $assigneeIds) {
-            $task = $workspace->collaborativeTasks()->create([
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'deadline' => $validated['deadline'] ?? null,
-                'status' => $validated['status'],
-                'progress' => $validated['progress'],
-            ]);
-
-            $task->assignees()->sync($assigneeIds->all());
-
-            return $task->load('assignees');
-        });
-
-        $this->syncAssigneeCalendars($task, $googleCalendar);
 
         return redirect()
             ->route('workspaces.show', ['workspace' => $workspace->id])
-            ->with('success', 'Task berhasil dibuat dan dikirim ke Google Calendar assignee yang sudah connect.');
+            ->with('success', 'Jadwal kolaborasi berhasil ditambahkan.');
     }
 
-    public function updateStatus(Request $request, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
+    public function update(Request $request, Workspace $workspace, $schedule_id, GoogleCalendarService $googleCalendar)
     {
+        // 1. Validasi input (sama seperti store)
         $validated = $request->validate([
-            'status' => ['required', 'in:todo,pending,review,done,overdue'],
+            'title'       => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'start_time'  => ['required', 'string'],
+            'end_time'    => ['required', 'string'],
         ]);
 
-        $task->update([
-            'status' => $validated['status'],
-            'progress' => $validated['status'] === 'done' ? 100 : min($task->progress, 99),
+        // 2. Cari jadwal milik workspace ini
+        $schedule = CollaborativeSchedule::where('workspace_id', $workspace->id)->findOrFail($schedule_id);
+
+        // 3. Parse format datetime dari HTML5 datetime-local
+        $startFormat = Carbon::parse(str_replace('T', ' ', $validated['start_time']))->toDateTimeString();
+        $endFormat   = Carbon::parse(str_replace('T', ' ', $validated['end_time']))->toDateTimeString();
+
+        // 4. Update data di database
+        $schedule->update([
+            'title'       => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'start_time'  => $startFormat,
+            'end_time'    => $endFormat,
         ]);
 
-        $this->syncAssigneeCalendars($task->load('assignees'), $googleCalendar);
-
-        return response()->json(['message' => 'Status task berhasil diperbarui.']);
-    }
-
-    public function destroy(Workspace $workspace, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
-    {
-        abort_unless($task->workspace_id === $workspace->id, 404);
-
-        foreach ($task->assignees as $assignee) {
-            $this->deleteAssigneeCalendarEvent($task, $assignee, $googleCalendar);
-        }
-
-        $task->delete();
-
-        return redirect()->route('workspaces.show', ['workspace' => $workspace->id]);
-    }
-
-    private function syncAssigneeCalendars(CollaborativeTask $task, GoogleCalendarService $googleCalendar): void
-    {
-        if (! $task->deadline) {
-            return;
-        }
-
-        foreach ($task->assignees as $assignee) {
-            // Sengaja dilepas try-catch-nya sementara agar jika query updatePivot kamu crash / error (kolom tidak ketemu), langsung memicu halaman merah.
-            $event = $googleCalendar->syncCollaborativeTask($task, $assignee);
-
-            if ($event && isset($event['id'])) {
-                $task->assignees()->updateExistingPivot($assignee->id, [
-                    'google_calendar_event_id' => $event['id'],
-                    'google_calendar_html_link' => $event['htmlLink'] ?? null,
-                ]);
-            }
-        }
-    }
-
-    private function deleteAssigneeCalendarEvent(CollaborativeTask $task, User $assignee, GoogleCalendarService $googleCalendar): void
-    {
+        // 5. Sinkronisasi ulang ke Google Calendar
         try {
-            $googleCalendar->deleteCollaborativeTask($task, $assignee);
+            $googleCalendar->syncCollaborativeSchedule($schedule, auth()->user());
         } catch (Throwable $exception) {
             report($exception);
+            session()->flash('warning', 'Jadwal diperbarui, tetapi Google Calendar gagal disinkronkan.');
         }
+
+        return redirect()
+            ->route('workspaces.show', ['workspace' => $workspace->id])
+            ->with('success', 'Jadwal berhasil diperbarui.');
+    }
+
+    public function destroy(Workspace $workspace, $schedule_id)
+    {
+        $schedule = CollaborativeSchedule::where('workspace_id', $workspace->id)->findOrFail($schedule_id);
+
+        // Hapus jadwal dari database
+        $schedule->delete();
+
+        return redirect()
+            ->route('workspaces.show', ['workspace' => $workspace->id])
+            ->with('success', 'Jadwal berhasil dihapus.');
     }
 }

@@ -40,18 +40,20 @@ return [
     ],
 
     'google' => [
+        // Kredensial utama (Dipakai barengan oleh Login & Kalender)
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        
+        // Redirect URI khusus untuk fitur Google Login (Punyaku)
         'redirect' => env('GOOGLE_REDIRECT_URI'),
+
+        // Redirect URI khusus untuk fitur Google Calendar (Punya Jer)
+        'calendar_redirect' => env('GOOGLE_CALENDAR_REDIRECT_URI'),
+
+        // Trik Bypass SSL cURL untuk Localhost
         'guzzle' => [
             'verify' => env('GOOGLE_SSL_VERIFY', true), 
         ],
-    ],
-
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
     ],
 
 ];

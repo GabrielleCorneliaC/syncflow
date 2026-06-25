@@ -41,11 +41,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     // Dev bypass login: akses langsung sebagai user ID 1
-    Route::get('/dev/login-as-user-1', function () {
-        Auth::loginUsingId(1);
-        request()->session()->regenerate();
-        return redirect()->route('personal.index');
-    })->name('dev.login-as-user-1');
+    // Route::get('/dev/login-as-user-1', function () {
+    //     Auth::loginUsingId(1);
+    //     request()->session()->regenerate();
+    //     return redirect()->route('personal.index');
+    // })->name('dev.login-as-user-1');
 
     // Home dan dashboard
     Route::get('/', fn () => redirect()->route('dashboard'));
@@ -103,6 +103,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'show'])
             ->name('workspaces.tasks.show');
 
+        Route::put('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'update'])
+            ->name('workspaces.tasks.update');
 
         Route::delete('/workspaces/{workspace}/tasks/{task}', [CollaborativeTaskController::class, 'destroy'])
             ->name('workspaces.tasks.destroy');
@@ -110,15 +112,21 @@ Route::middleware('auth')->group(function () {
         // Collaborative schedule
         Route::post('/workspaces/{workspace}/schedules', [CollaborativeScheduleController::class, 'store'])
             ->name('workspaces.schedules.store');
+        
+        Route::put('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'update'])
+            ->name('workspaces.schedules.update');
 
-        Route::delete('/workspaces/{workspace}/schedules/{schedule_id}', [CollaborativeScheduleController::class, 'destroy'])
+        Route::delete('/workspaces/{workspace}/schedules/{schedule}', [CollaborativeScheduleController::class, 'destroy'])
             ->name('workspaces.schedules.destroy');
 
         // Resource link
         Route::post('/workspaces/{workspace}/resources', [ResourceLinkController::class, 'store'])
             ->name('workspaces.resources.store');
 
-        Route::delete('/workspaces/{workspace}/resources/{resource_id}', [ResourceLinkController::class, 'destroy'])
+        Route::put('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'update'])
+            ->name('workspaces.resources.update');
+
+        Route::delete('/workspaces/{workspace}/resources/{resource}', [ResourceLinkController::class, 'destroy'])
             ->name('workspaces.resources.destroy');
 
         // Task comment

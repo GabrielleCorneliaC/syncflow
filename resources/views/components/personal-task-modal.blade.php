@@ -37,29 +37,39 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deadline</label>
-                    <input type="date" name="due_date" value="{{ old('due_date', $task?->due_date?->format('Y-m-d')) }}"
+                    <input type="date" name="due_date" value="{{ old('deadline',$task?->due_date) }}"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Prioritas</label>
+                    <select name="priority" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
+                        <option value="low" @selected(old('priority', $task?->priority ?? 'medium') === 'low')>Low</option>
+                        <option value="medium" @selected(old('priority', $task?->priority ?? 'medium') === 'medium')>Medium</option>
+                        <option value="high" @selected(old('priority', $task?->priority ?? 'medium') === 'high')>High</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Progress (%)</label>
+                    <input type="number" name="progress" min="0" max="100" value="{{ old('progress', $task?->progress ?? 0) }}"
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
                     <select name="status" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
-                        @foreach(['pending' => 'Pending', 'in_progress' => 'In Progress', 'completed' => 'Completed'] as $value => $label)
-                            <option value="{{ $value }}" @selected(old('status', $task?->status ?? 'pending') === $value)>{{ $label }}</option>
-                        @endforeach
+                        <option value="todo" @selected(old('status', $task?->status ?? 'todo') === 'todo')>To Do</option>
+                        <option value="in_progress" @selected(old('status', $task?->status ?? 'todo') === 'in_progress')>In Progress</option>
+                        <option value="done" @selected(old('status', $task?->status ?? 'todo') === 'done')>Done</option>
                     </select>
                 </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Progress (%)</label>
-                <input type="number" name="progress" min="0" max="100" value="{{ old('progress', $task?->progress ?? 0) }}"
-                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
             </div>
 
             <div class="flex gap-3 pt-1">
                 <button type="button" onclick="closeModal('{{ $id }}')"
                         class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style="background:#C8216B;">Save</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style="background:#b30084;">Save</button>
             </div>
         </form>
     </div>

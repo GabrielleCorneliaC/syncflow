@@ -3,11 +3,19 @@
 @section('page-title', 'Project Workspaces')
 
 @section('content')
-<div class="p-6 bg-surface min-h-screen">
+<!-- <div class="p-6 bg-surface min-h-screen"> -->
 
     {{-- PAGE HEADER --}}
-    <div class="mb-6">
-        <h1 class="font-heading font-bold text-3xl text-textmain">Project Workspaces</h1>
+
+    <div class="flex items-end justify-between
+            border-b border-[rgba(203,199,182,0.3)] pb-[13px]
+            mb-6">
+
+    {{-- Judul: Montserrat ExtraBold 48px #1d1c17 --}}
+    <h1 class="font-montserrat font-extrabold text-[#1d1c17] tracking-[-0.02em]
+               text-3xl sm:text-4xl lg:text-5xl leading-tight">
+        Project Workspaces
+    </h1>
     </div>
 
     {{-- TABS --}}
@@ -287,7 +295,7 @@
         </div>
     </div>
 
-</div>
+<!-- </div> -->
 @endsection
 
 @push('scripts')

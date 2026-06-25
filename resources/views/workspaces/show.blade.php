@@ -55,7 +55,7 @@
                     </svg>
                     Back to Workspaces
                 </a>
-                <h1 class="font-heading font-bold text-xl text-white">{{ $workspace->name }}</h1>
+                <h1 class="font-heading font-bold text-5xl text-white">{{ $workspace->name }}</h1>
                 @if($workspace->description)
                 <p class="text-white/70 text-xs mt-0.5">{{ $workspace->description }}</p>
                 @endif
@@ -95,15 +95,10 @@
             </button>
 
             {{-- Delete --}}
-            <form action="{{ route('workspaces.destroy', $workspace->id) }}" method="POST" class="m-0 p-0 flex"
-                  onsubmit="return confirm('Hapus workspace ini? Tindakan tidak bisa dibatalkan.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                    class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">
-                    Delete
-                </button>
-            </form>
+            <button onclick="openModal('modal-delete-workspace')"
+                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">
+                Delete
+            </button>
         </div>
         @endif
     </div>
@@ -187,7 +182,7 @@
 
         {{-- Tabel task --}}
         <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden">
+                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden min-h-[220px]" >
             <table class="w-full border-collapse">
                 <thead>
                     <tr class="border-b border-border text-xs font-bold text-textsoft uppercase bg-gray-50/50">
@@ -200,7 +195,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-150">
                    @forelse($workspace->collaborativeTasks as $task)
-    <tr class="hover:bg-muted/50 transition-colors">
+        <tr class="hover:bg-muted/50 transition-colors">
 
         {{-- Checkbox status --}}
         <td class="px-5 py-4 text-center">
@@ -285,29 +280,137 @@
             </div>
         </td>
 
-        {{-- Aksi ke Detail / Fitur Obrolan Chat --}}
+        {{-- Aksi ke Detail / Fitur Obrolan Chat & Dropdown Edit/Delete --}}
         <td class="px-4 py-4 text-center">
-            <div class="flex justify-center">
+            <div class="flex justify-center items-center gap-1 relative" x-data="{ open: false }">
+                
+                {{-- Tombol Detail / Obrolan (Ikon Asli) --}}
                 <a href="{{ route('workspaces.tasks.show', ['workspace' => $workspace->id, 'task' => $task->id]) }}"
-                   class="w-8 h-8 flex items-center justify-center rounded-lg text-texthint hover:text-primary hover:bg-accent/40 transition-colors">
+                   class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-primary hover:bg-accent/40 transition-colors" title="Buka Detail & Chat">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                     </svg>
                 </a>
-            </div>
-        </td>
-    </tr>
-@empty
-    <tr>
-        <td colspan="5" class="text-center py-12 text-texthint text-sm">
-            Belum ada tugas kelompok. Silakan tambah tugas baru!
-        </td>
-    </tr>
-@endforelse
 
-                   
+                @if(!empty($isOwner))
+                {{-- Tombol Titik Tiga (Hanya muncul jika dia owner/admin) --}}
+                <button @click="open = !open"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-textmain hover:bg-muted transition-colors">
+                    <svg class="w-1 h-4" viewBox="0 0 4 16" fill="currentColor">
+                        <circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/>
+                    </svg>
+                </button>
+
+                {{-- Menu Dropdown Edit/Hapus --}}
+                <div x-show="open" @click.outside="open = false"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     class="absolute right-0 top-full mt-1 z-20 w-36 bg-white border border-border rounded-xl shadow-lg py-1 text-left">
+                    <button @click="open=false; openModal('modal-edit-collab-task-{{ $task->id }}')"
+                            class="w-full text-left px-4 py-2 text-sm text-textmain hover:bg-muted transition">
+                        Edit Tugas
+                    </button>
+                    <button @click="open=false; openModal('modal-delete-collab-task-{{ $task->id }}')"
+                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                        Hapus
+                    </button>
+                </div>
+                @endif
+            </div>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="5" class="text-center py-12 text-texthint text-sm">
+                Belum ada tugas kelompok. Silakan tambah tugas baru!
+            </td>
+        </tr>
+    @endforelse   
                 </tbody>
-            </table> </div>
+            </table>
+            
+            @foreach($workspace->collaborativeTasks as $task)
+                @if(!empty($isOwner))
+            {{-- MODAL HAPUS TUGAS (Khusus untuk baris ini) --}}
+            <x-delete-confirm-modal
+                id="modal-delete-collab-task-{{ $task->id }}"
+                title="Hapus Tugas?"
+                message="Tugas '{{ $task->name }}' akan dihapus secara permanen."
+                action="{{ route('workspaces.tasks.destroy', ['workspace' => $workspace->id, 'task' => $task->id]) }}"
+            />
+
+            {{-- MODAL EDIT TUGAS (Khusus untuk baris ini) --}}
+            <div id="modal-edit-collab-task-{{ $task->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
+                <div onclick="closeModal('modal-edit-collab-task-{{ $task->id }}')" class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+                    <div class="relative bg-surface rounded-2xl border border-border shadow-[6px_6px_0px_#cbc7b6] w-full max-w-md p-6 z-10">
+                        <div class="flex items-center justify-between mb-5">
+                            <h2 class="font-heading font-bold text-lg text-textmain">Edit Tugas</h2>
+                            <button onclick="closeModal('modal-edit-collab-task-{{ $task->id }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-texthint hover:text-textsoft hover:bg-muted transition-colors">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        
+                        <form action="{{ route('workspaces.tasks.update', ['workspace' => $workspace->id, 'task' => $task->id]) }}" method="POST" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+                            <div>
+                                <label class="block text-sm font-semibold text-textsoft mb-1.5">Judul Tugas</label>
+                                <input type="text" name="name" required value="{{ $task->name }}"
+                                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-textsoft mb-1.5">Deskripsi Detail</label>
+                                <textarea name="description" rows="2"
+                                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white text-textmain focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">{{ $task->description }}</textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Batas Waktu</label>
+                                    <input type="datetime-local" name="deadline" value="{{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('Y-m-d\TH:i') : '' }}"
+                                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Assign ke</label>
+                                    <select name="assignee_id" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
+                                        <option value="">— Pilih —</option>
+                                        @foreach($workspace->members as $member)
+                                            <option value="{{ $member->user->id }}" {{ $task->assignees->contains('id', $member->user->id) ? 'selected' : '' }}>{{ $member->user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Status</label>
+                                    <select name="status" required class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
+                                        <option value="todo" {{ $task->status == 'todo' ? 'selected' : '' }}>To Do</option>
+                                        <option value="pending" {{ $task->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="review" {{ $task->status == 'review' ? 'selected' : '' }}>Review</option>
+                                        <option value="done" {{ $task->status == 'done' ? 'selected' : '' }}>Done</option>
+                                        <option value="overdue" {{ $task->status == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Progress (%)</label>
+                                    <input type="number" name="progress" min="0" max="100" value="{{ $task->progress }}" required
+                                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+                            </div>
+                            <div class="flex gap-3 pt-3">
+                                <button type="button" onclick="closeModal('modal-edit-collab-task-{{ $task->id }}')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-textsoft bg-muted border border-border transition-all">
+                                    Batal
+                                </button>
+                                <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary-dark shadow-[4px_4px_0px_#6a1452] active:translate-y-px active:shadow-[2px_2px_0_#6a1452] transition-all">
+                                    Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                @endif
+            @endforeach
+        </div>
     </div>
 
     {{-- ══════════════════════════════════════════
@@ -335,7 +438,7 @@
         </div>
 
         <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden">
+                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden min-h-[220px]">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border">
@@ -347,35 +450,144 @@
                     </tr>
                 </thead>
                <tbody class="divide-y divide-gray-50">
-    @forelse($schedules as $schedule)
-    <tr class="hover:bg-gray-50/70 transition-colors">
-        <td class="px-5 py-4">
-            <span class="inline-block w-2 h-2 rounded-full" style="background: #C8216B;"></span>
-        </td>
-        <td class="px-4 py-4 font-semibold text-gray-800">{{ $schedule->title }}</td>
-        <td class="px-4 py-4 text-gray-600">{{ \Carbon\Carbon::parse($schedule->start_time)->format('d M Y') }}</td>
-        <td class="px-4 py-4 text-gray-600">
-            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
-        </td>
-        <td class="px-4 py-4">
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                  style="background: #FFF0F6; color: #C8216B;">
-                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                {{ $schedule->description ?? 'Tidak ada deskripsi' }}
-            </span>
-        </td>
-    </tr>
-    @empty
-    <tr><td colspan="5" class="text-center py-12 text-gray-400 text-sm">Belum ada jadwal. Tambahkan agenda!</td></tr>
-    @endforelse
-</tbody>
+                    @forelse($schedules as $schedule)
+                    <tr class="hover:bg-gray-50/70 transition-colors">
+                        <td class="px-5 py-4">
+                            <span class="inline-block w-2 h-2 rounded-full" style="background: #C8216B;"></span>
+                        </td>
+                        <td class="px-4 py-4 font-semibold text-gray-800">{{ $schedule->title }}</td>
+                        <td class="px-4 py-4 text-gray-600">{{ \Carbon\Carbon::parse($schedule->start_time)->format('d M Y') }}</td>
+                        <td class="px-4 py-4 text-gray-600">
+                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
+                        </td>
+                        <td class="px-4 py-4 flex items-center justify-between">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                                style="background: #FFF0F6; color: #C8216B;">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                {{ $schedule->description ?? 'Tidak ada deskripsi' }}
+                            </span>
+
+                            @if(!empty($isOwner))
+                            {{-- Tombol Aksi Titik Tiga (Tanpa kolom baru) --}}
+                            <div class="relative flex-shrink-0" x-data="{ open: false }">
+                                <button @click="open = !open"
+                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-textmain hover:bg-muted transition-colors">
+                                    <svg class="w-1 h-4" viewBox="0 0 4 16" fill="currentColor">
+                                        <circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/>
+                                    </svg>
+                                </button>
+                                
+                                {{-- Dropdown Menu --}}
+                                <div x-show="open" @click.outside="open = false"
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    class="absolute right-0 z-20 w-40 bg-white border border-[#cbc7b6] rounded-xl shadow-lg py-1">
+                                    <button @click="open=false; openModal('modal-edit-collab-schedule-{{ $schedule->id }}')"
+                                            class="w-full text-left px-4 py-2 text-sm text-textmain hover:bg-muted transition">
+                                        Edit Jadwal
+                                    </button>
+                                    <button @click="open=false; openModal('modal-delete-collab-schedule-{{ $schedule->id }}')"
+                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </div>
+                            @endif
+                            
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="5" class="text-center py-12 text-gray-400 text-sm">Belum ada jadwal. Tambahkan agenda!</td></tr>
+                    @endforelse
+                </tbody>
             </table>
+
+            @foreach($workspace->collaborativeSchedules as $schedule)
+                @if(!empty($isOwner))
+                    {{-- MODAL HAPUS JADWAL --}}
+                    <x-delete-confirm-modal
+                        id="modal-delete-collab-schedule-{{ $schedule->id }}"
+                        title="Hapus Jadwal?"
+                        message="Jadwal '{{ $schedule->title }}' akan dihapus secara permanen."
+                        action="{{ route('workspaces.schedules.destroy', ['workspace' => $workspace->id, 'schedule' => $schedule->id]) }}"
+                    />
+
+                    {{-- MODAL EDIT JADWAL --}}
+                    <div id="modal-edit-collab-schedule-{{ $schedule->id }}"
+                        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div onclick="document.getElementById('modal-edit-collab-schedule-{{ $schedule->id }}').classList.add('hidden')"
+                            class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+                        <div class="relative bg-surface rounded-2xl border border-border
+                                    shadow-[6px_6px_0px_#cbc7b6]
+                                    w-full max-w-md p-6 z-10">
+
+                            <div class="flex items-center justify-between mb-5">
+                                <h2 class="font-heading font-bold text-lg text-textmain">Edit Jadwal</h2>
+                                <button onclick="document.getElementById('modal-edit-collab-schedule-{{ $schedule->id }}').classList.add('hidden')"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center
+                                            text-texthint hover:text-textsoft hover:bg-muted transition-colors">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form action="{{ route('workspaces.schedules.update', ['workspace' => $workspace->id, 'schedule' => $schedule->id]) }}" method="POST" class="space-y-4">
+                                @csrf
+                                @method('PUT')
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Nama Agenda</label>
+                                    <input type="text" name="title" required value="{{ $schedule->title }}"
+                                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                                            text-textmain placeholder:text-texthint focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-textsoft mb-1.5">Waktu Mulai</label>
+                                        <input type="datetime-local" name="start_time" required
+                                            value="{{ $schedule->start_time ? \Carbon\Carbon::parse($schedule->start_time)->format('Y-m-d\TH:i') : '' }}"
+                                            class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                                                text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-textsoft mb-1.5">Waktu Selesai</label>
+                                        <input type="datetime-local" name="end_time" required
+                                            value="{{ $schedule->end_time ? \Carbon\Carbon::parse($schedule->end_time)->format('Y-m-d\TH:i') : '' }}"
+                                            class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                                                text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-textsoft mb-1.5">Lokasi / Keterangan</label>
+                                    <input type="text" name="description" placeholder="e.g. Studio 4B, Google Meet..."
+                                        value="{{ $schedule->description }}"
+                                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                                            text-textmain placeholder:text-texthint focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+
+                                <div class="flex gap-3 pt-1">
+                                    <button type="button"
+                                            onclick="document.getElementById('modal-edit-collab-schedule-{{ $schedule->id }}').classList.add('hidden')"
+                                            class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-textsoft bg-muted hover:bg-border border border-border transition-all">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                            class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary-dark shadow-[4px_4px_0px_#6a1452] active:translate-y-px active:shadow-[2px_2px_0_#6a1452] transition-all">
+                                        Simpan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════
-         PANEL: RESOURCE & LINK
-    ══════════════════════════════════════════ --}}
     {{-- ══════════════════════════════════════════
          PANEL: RESOURCE & LINK
     ══════════════════════════════════════════ --}}
@@ -414,16 +626,15 @@
                         </button>
                         
                         <div id="resource-menu-{{ $resource->id }}"
-                             class="hidden absolute right-0 top-8 bg-white rounded-xl border border-border shadow-[3px_3px_0px_#cbc7b6] py-1 z-50 w-32">
-                            <button onclick="editResource({{ $resource->id }})" class="w-full text-left px-3 py-2 text-xs text-textsoft hover:bg-muted transition-colors">
+                            class="hidden absolute right-0 top-8 bg-white rounded-xl border border-border shadow-[3px_3px_0px_#cbc7b6] py-1 z-50 w-32">
+                            <button onclick="toggleResourceMenu({{ $resource->id }}); document.getElementById('modal-edit-resource-{{ $resource->id }}').classList.remove('hidden')"
+                                    class="w-full text-left px-3 py-2 text-xs text-textsoft hover:bg-muted transition-colors">
                                 Edit
                             </button>
-                            <form action="{{ route('workspaces.resources.destroy', [$workspace->id ?? 1, $resource->id]) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
-                                    Hapus
-                                </button>
-                            </form>
+                            <button onclick="toggleResourceMenu({{ $resource->id }}); document.getElementById('modal-delete-resource-{{ $resource->id }}').classList.remove('hidden')"
+                                    class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
+                                Hapus
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -456,7 +667,7 @@
                     </div>
 
                     {{-- Text --}}
-                    <h3 class="font-bold text-[#3a3a3a] text-sm mb-1.5 line-clamp-1 relative z-30">{{ $resource->title }}</h3>
+                    <h2 class="font-bold text-[#3a3a3a] text-md mb-1.5 line-clamp-1 relative z-30">{{ $resource->title }}</h2>
                     <p class="text-[11px] text-[#5a5a5a] leading-relaxed line-clamp-3 mb-auto relative z-30">
                         {{ $resource->description }}
                     </p>
@@ -483,6 +694,52 @@
             @endforelse
         </div>
     </div>
+
+    @foreach($resources as $resource)
+        @if(!empty($isOwner))
+            {{-- MODAL HAPUS RESOURCE --}}
+            <x-delete-confirm-modal
+                id="modal-delete-resource-{{ $resource->id }}"
+                title="Hapus Resource?"
+                message="Resource '{{ $resource->title }}' akan dihapus secara permanen."
+                action="{{ route('workspaces.resources.destroy', ['workspace' => $workspace->id, 'resource' => $resource->id]) }}"
+            />
+
+            {{-- MODAL EDIT RESOURCE --}}
+            <div id="modal-edit-resource-{{ $resource->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div onclick="document.getElementById('modal-edit-resource-{{ $resource->id }}').classList.add('hidden')" class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+                <div class="relative bg-surface rounded-2xl border border-border shadow-[6px_6px_0px_#cbc7b6] w-full max-w-md p-6 z-10">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="font-heading font-bold text-lg text-textmain">Edit Resource</h2>
+                        <button onclick="document.getElementById('modal-edit-resource-{{ $resource->id }}').classList.add('hidden')" class="w-8 h-8 rounded-lg flex items-center justify-center text-texthint hover:text-textsoft hover:bg-muted transition-colors">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <form action="{{ route('workspaces.resources.update', ['workspace' => $workspace->id, 'resource' => $resource->id]) }}" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="block text-sm font-semibold text-textsoft mb-1.5">Judul Resource</label>
+                            <input type="text" name="title" required value="{{ $resource->title }}" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain placeholder:text-texthint focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-textsoft mb-1.5">URL / Link</label>
+                            <input type="url" name="url" required value="{{ $resource->url }}" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain placeholder:text-texthint focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-textsoft mb-1.5">Deskripsi</label>
+                            <textarea name="description" rows="3" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain placeholder:text-texthint focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none transition-all">{{ $resource->description }}</textarea>
+                        </div>
+                        <div class="flex gap-3 pt-1">
+                            <button type="button" onclick="document.getElementById('modal-edit-resource-{{ $resource->id }}').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-textsoft bg-muted hover:bg-border border border-border transition-all">Batal</button>
+                            <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary-dark shadow-[4px_4px_0px_#6a1452] active:translate-y-px active:shadow-[2px_2px_0_#6a1452] transition-all">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+    @endforeach
 
 @endsection
 
@@ -828,6 +1085,16 @@
         </form>
     </div>
 </div>
+
+{{-- ════ MODAL: DELETE WORKSPACE ════ --}}
+@if(!empty($isOwner))
+<x-delete-confirm-modal
+    id="modal-delete-workspace"
+    title="Hapus Workspace?"
+    message="Workspace '{{ $workspace->name }}' beserta seluruh tugas, jadwal, dan resource di dalamnya akan dihapus secara permanen."
+    action="{{ route('workspaces.destroy', $workspace->id) }}"
+/>
+@endif
 
 @push('scripts')
 <script>

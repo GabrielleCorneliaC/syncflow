@@ -26,6 +26,7 @@ class GoogleCalendarService
     public function storeTokensFromCallback(User $user, string $code): void
     {
         $response = Http::asForm()
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->post('https://oauth2.googleapis.com/token', [
                 'code' => $code,
                 'client_id' => config('services.google.client_id'),
@@ -62,6 +63,7 @@ class GoogleCalendarService
 
         if ($schedule->google_calendar_event_id) {
             $response = Http::withToken($token)
+                ->withOptions(['verify' => config('services.google.guzzle.verify')])
                 ->put(
                     "https://www.googleapis.com/calendar/v3/calendars/primary/events/{$schedule->google_calendar_event_id}",
                     $payload
@@ -70,6 +72,7 @@ class GoogleCalendarService
                 ->json();
         } else {
             $response = Http::withToken($token)
+                ->withOptions(['verify' => config('services.google.guzzle.verify')])
                 ->post(
                     'https://www.googleapis.com/calendar/v3/calendars/primary/events',
                     $payload
@@ -93,6 +96,7 @@ class GoogleCalendarService
         }
 
         Http::withToken($this->validAccessToken($user))
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->delete(
                 "https://www.googleapis.com/calendar/v3/calendars/primary/events/{$schedule->google_calendar_event_id}"
             )
@@ -123,6 +127,7 @@ class GoogleCalendarService
 
         if ($eventId) {
             return Http::withToken($token)
+                ->withOptions(['verify' => config('services.google.guzzle.verify')])
                 ->put(
                     "https://www.googleapis.com/calendar/v3/calendars/primary/events/{$eventId}",
                     $payload
@@ -132,6 +137,7 @@ class GoogleCalendarService
         }
 
         return Http::withToken($token)
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->post(
                 'https://www.googleapis.com/calendar/v3/calendars/primary/events',
                 $payload
@@ -154,6 +160,7 @@ class GoogleCalendarService
         }
 
         Http::withToken($this->validAccessToken($user))
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->delete(
                 "https://www.googleapis.com/calendar/v3/calendars/primary/events/{$eventId}"
             )
@@ -177,6 +184,7 @@ class GoogleCalendarService
 
         if ($schedule->google_calendar_event_id) {
             return Http::withToken($token)
+                ->withOptions(['verify' => config('services.google.guzzle.verify')])
                 ->put(
                     "https://www.googleapis.com/calendar/v3/calendars/primary/events/{$schedule->google_calendar_event_id}",
                     $payload
@@ -186,6 +194,7 @@ class GoogleCalendarService
         }
 
         $response = Http::withToken($token)
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->post(
                 'https://www.googleapis.com/calendar/v3/calendars/primary/events',
                 $payload
@@ -325,6 +334,7 @@ class GoogleCalendarService
         }
 
         $response = Http::asForm()
+            ->withOptions(['verify' => config('services.google.guzzle.verify')])
             ->post('https://oauth2.googleapis.com/token', [
                 'client_id' => config('services.google.client_id'),
                 'client_secret' => config('services.google.client_secret'),
@@ -344,6 +354,6 @@ class GoogleCalendarService
 
     private function redirectUri(): string
     {
-        return config('services.google.redirect_uri') ?: route('google.calendar.callback');
+        return config('services.google.calendar_redirect') ?: route('google.calendar.callback');
     }
 }
