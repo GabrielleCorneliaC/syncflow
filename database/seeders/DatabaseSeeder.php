@@ -28,5 +28,26 @@ class DatabaseSeeder extends Seeder
 
         // 3. Masukkan Alex sebagai Admin di workspace tersebut
         $workspace->members()->attach($user->id, ['role' => 'admin']);
+        
+
+        // Admin default — GANTI PASSWORD SETELAH LOGIN PERTAMA!
+        User::firstOrCreate(
+            ['email' => 'admin@syncflow.test'],
+            [
+                'name'     => 'Admin SyncFlow',
+                'password' => Hash::make('password'),
+                'role'     => 'admin',
+            ]
+        );
+
+        // Contoh member (untuk testing)
+        User::firstOrCreate(
+            ['email' => 'elizabeth@syncflow.test'],
+            [
+                'name'     => 'Elizabeth',
+                'password' => Hash::make('password'),
+                'role'     => 'member',
+            ]
+        );
     }
 }

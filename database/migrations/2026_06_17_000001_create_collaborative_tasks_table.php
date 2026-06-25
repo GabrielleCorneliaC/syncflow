@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('workspace_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->date('deadline')->nullable();
+            $table->dateTime('deadline')->nullable();
             $table->enum('status', ['todo', 'pending', 'review', 'done', 'overdue'])->default('todo');
             $table->unsignedTinyInteger('progress')->default(0);
             $table->unsignedInteger('attachments_count')->default(0);

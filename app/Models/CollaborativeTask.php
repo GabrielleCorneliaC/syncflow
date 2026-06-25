@@ -20,7 +20,7 @@ class CollaborativeTask extends Model
     protected function casts(): array
     {
         return [
-            'deadline' => 'date',
+            'deadline' => 'datetime',
             'progress' => 'integer',
             'attachments_count' => 'integer',
         ];
