@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — SyncFlow</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}?v=3">
+    <link rel="icon" type="image/png" href="@yield('favicon', asset('assets/logo.png'))?v={{ time() }}">
+    <link rel="shortcut icon" type="image/png" href="@yield('favicon', asset('assets/logo.png'))?v={{ time() }}">
+    <!-- <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}?v=3"> -->
 
     {{-- Google Fonts: Montserrat + Inter --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -288,7 +290,7 @@
     </header>
 
     {{-- ── Flash messages ───────────────────────────── --}}
-    @if(session('success'))
+    <!-- @if(session('success'))
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(()=>show=false,4000)"
          class="mx-4 mt-3 flex items-center gap-2
                 bg-green-50 border border-green-200 text-green-700
@@ -310,7 +312,7 @@
         </svg>
         {{ session('error') }}
     </div>
-    @endif
+    @endif -->
 
     {{-- ── Main content ────────────────────────────── --}}
     <main class="flex-1 overflow-y-auto">

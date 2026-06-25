@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Project Workspaces')
 @section('page-title', 'Project Workspaces')
+@section('favicon', $workspace->cover_image ?? asset('assets/logo.png'))
+
 
 @section('content')
 <!-- <div class="p-6 bg-surface min-h-screen"> -->

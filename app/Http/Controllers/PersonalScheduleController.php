@@ -34,10 +34,13 @@ class PersonalScheduleController extends Controller
     {
         $this->authorizeSchedule($schedule);
 
-        try {
-            $googleCalendar->deleteSchedule($schedule);
-        } catch (Throwable $exception) {
-            report($exception);
+        // Hapus dari Google Calendar dulu JIKA punya Event ID
+        if ($schedule->google_calendar_event_id) {
+            try {
+                $googleCalendar->deleteSchedule($schedule);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         }
 
         $schedule->delete();
@@ -86,7 +89,14 @@ class PersonalScheduleController extends Controller
     private function syncGoogleCalendar(PersonalSchedule $schedule, GoogleCalendarService $googleCalendar): void
     {
         try {
-            $googleCalendar->syncSchedule($schedule);
+            $event = $googleCalendar->syncSchedule($schedule);
+
+            // SIMPAN ID EVENT AGAR BISA DI-UPDATE/DELETE!
+            if ($event && isset($event['id'])) {
+                $schedule->google_calendar_event_id = $event['id'];
+                $schedule->google_calendar_html_link = $event['htmlLink'] ?? null;
+                $schedule->save();
+            }
         } catch (Throwable $exception) {
             report($exception);
             session()->flash('warning', 'Schedule tersimpan, tetapi sinkronisasi Google Calendar gagal.');

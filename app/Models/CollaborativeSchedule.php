@@ -14,4 +14,12 @@ class CollaborativeSchedule extends Model
         'end_time',
         'google_calendar_event_id'
     ];
+
+    // protected function casts(): array
+    // {
+    //     return [
+    //         'start_time' => 'datetime',
+    //         'end_time' => 'datetime',
+    //     ];
+    // }
 }

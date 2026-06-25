@@ -24,7 +24,6 @@ class CollaborativeTaskController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            // Mengizinkan string datetime standar agar fleksibel dibaca Carbon
             'deadline' => ['nullable', 'string'], 
             'status' => ['required', 'in:todo,pending,review,done,overdue'],
             'progress' => ['required', 'integer', 'min:0', 'max:100'],
@@ -35,54 +34,39 @@ class CollaborativeTaskController extends Controller
 
         $assigneeIds = collect($validated['assignee_ids'] ?? [])
             ->when(isset($validated['assignee_id']), fn ($ids) => $ids->push($validated['assignee_id']))
-            ->filter()
-            ->unique()
-            ->values();
+            ->filter()->unique()->values();
 
-        // Cari ID member + Owner yang sah di workspace ini
-        $allowedUserIds = DB::table('workspace_members')
-            ->where('workspace_id', $workspace->id)
-            ->pluck('user_id')
-            ->filter()
-            ->unique();
+        $allowedUserIds = DB::table('workspace_members')->where('workspace_id', $workspace->id)->pluck('user_id')->filter()->unique();
 
-        // Saring assignee
         if ($assigneeIds->isEmpty() && auth()->check()) {
             $assigneeIds->push(auth()->id());
         } else {
             $assigneeIds = $assigneeIds->intersect($allowedUserIds)->values();
-            if ($assigneeIds->isEmpty() && auth()->check()) {
-                $assigneeIds->push(auth()->id());
-            }
+            if ($assigneeIds->isEmpty() && auth()->check()) $assigneeIds->push(auth()->id());
         }
 
         $task = DB::transaction(function () use ($workspace, $validated, $assigneeIds, $request) {
-            // 💡 SOLUSI JAM TERPOTONG: Bersihkan format 'T' HTML5 datetime-local secara paksa ke standar format DateTime
             $deadlineFormat = null;
             if ($request->filled('deadline')) {
-                $cleanDeadline = str_replace('T', ' ', $validated['deadline']);
-                $deadlineFormat = Carbon::parse($cleanDeadline)->toDateTimeString();
+                $deadlineFormat = Carbon::parse(str_replace('T', ' ', $validated['deadline']))->toDateTimeString();
             }
 
             $task = $workspace->collaborativeTasks()->create([
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
-                'deadline' => $deadlineFormat, // Tersimpan penuh dengan format YYYY-MM-DD HH:MM:SS
+                'deadline' => $deadlineFormat,
                 'status' => $validated['status'],
                 'progress' => $validated['progress'],
             ]);
 
             $task->assignees()->sync($assigneeIds->all());
-
             return $task->load('assignees');
         });
 
-        // Paksa sinkronisasi ulang ke Google Calendar
         $this->syncAssigneeCalendars($task, $googleCalendar);
 
-        return redirect()
-            ->route('workspaces.show', ['workspace' => $workspace->id])
-            ->with('success', 'Task berhasil dibuat dan dikirim ke Google Calendar.');
+        return redirect()->route('workspaces.show', ['workspace' => $workspace->id])
+                         ->with('success', 'Task berhasil dibuat dan dikirim ke Google Calendar.');
     }
 
     public function update(Request $request, Workspace $workspace, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
@@ -102,32 +86,34 @@ class CollaborativeTaskController extends Controller
 
         $assigneeIds = collect($validated['assignee_ids'] ?? [])
             ->when(isset($validated['assignee_id']), fn ($ids) => $ids->push($validated['assignee_id']))
-            ->filter()
-            ->unique()
-            ->values();
+            ->filter()->unique()->values();
 
-        // Cari ID member + Owner yang sah di workspace ini
-        $allowedUserIds = DB::table('workspace_members')
-            ->where('workspace_id', $workspace->id)
-            ->pluck('user_id')
-            ->filter()
-            ->unique();
+        $allowedUserIds = DB::table('workspace_members')->where('workspace_id', $workspace->id)->pluck('user_id')->filter()->unique();
 
-        // Saring assignee
         if ($assigneeIds->isEmpty() && auth()->check()) {
             $assigneeIds->push(auth()->id());
         } else {
             $assigneeIds = $assigneeIds->intersect($allowedUserIds)->values();
-            if ($assigneeIds->isEmpty() && auth()->check()) {
-                $assigneeIds->push(auth()->id());
-            }
+            if ($assigneeIds->isEmpty() && auth()->check()) $assigneeIds->push(auth()->id());
         }
 
-        DB::transaction(function () use ($task, $validated, $assigneeIds, $request) {
+        // 1. CARI ASSIGNEE YANG DICOPOT TUGASNYA
+        $oldAssignees = $task->assignees;
+        $newAssigneeIdsArray = $assigneeIds->all();
+        $removedAssignees = $oldAssignees->filter(function ($user) use ($newAssigneeIdsArray) {
+            return !in_array($user->id, $newAssigneeIdsArray);
+        });
+
+        // 2. HAPUS EVENT KALENDER MEREKA
+        foreach ($removedAssignees as $removedUser) {
+            $this->deleteAssigneeCalendarEvent($task, $removedUser, $googleCalendar);
+        }
+
+        // 3. UPDATE DATABASE
+        DB::transaction(function () use ($task, $validated, $newAssigneeIdsArray, $request) {
             $deadlineFormat = null;
             if ($request->filled('deadline')) {
-                $cleanDeadline = str_replace('T', ' ', $validated['deadline']);
-                $deadlineFormat = Carbon::parse($cleanDeadline)->toDateTimeString();
+                $deadlineFormat = Carbon::parse(str_replace('T', ' ', $validated['deadline']))->toDateTimeString();
             }
 
             $task->update([
@@ -138,46 +124,29 @@ class CollaborativeTaskController extends Controller
                 'progress' => $validated['progress'],
             ]);
 
-            $task->assignees()->sync($assigneeIds->all());
+            $task->assignees()->sync($newAssigneeIdsArray);
         });
 
-        // Sinkronisasi ulang ke Google Calendar
-        $this->syncAssigneeCalendars($task->load('assignees'), $googleCalendar);
+        // 4. SYNC KALENDER ANGGOTA YANG BARU / TETAP
+        $this->syncAssigneeCalendars($task->fresh('assignees'), $googleCalendar);
 
-        return redirect()
-            ->route('workspaces.show', ['workspace' => $workspace->id])
-            ->with('success', 'Tugas berhasil diperbarui.');
+        return redirect()->route('workspaces.show', ['workspace' => $workspace->id])->with('success', 'Tugas berhasil diperbarui.');
     }
 
     public function updateStatus(Request $request, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
     {
-        $validated = $request->validate([
-            'status' => ['required'],
-        ]);
+        $validated = $request->validate(['status' => ['required']]);
+        $newStatus = ($validated['status'] === true || $validated['status'] === 'true') ? 'done' : 'todo';
 
-        $statusInput = $validated['status'];
-        
-        if ($statusInput === true || $statusInput === 'true') {
-            $newStatus = 'done';
-        } else {
-            $newStatus = 'todo';
-        }
-
-        $task->update([
-            'status' => $newStatus,
-        ]);
+        $task->update(['status' => $newStatus]);
 
         try {
-            $this->syncAssigneeCalendars($task->load('assignees'), $googleCalendar);
+            $this->syncAssigneeCalendars($task->fresh('assignees'), $googleCalendar);
         } catch (\Throwable $exception) {
             report($exception);
         }
 
-        return response()->json([
-            'success' => true,
-            'status' => $newStatus,
-            'progress' => $task->progress
-        ]);
+        return response()->json(['success' => true, 'status' => $newStatus, 'progress' => $task->progress]);
     }
 
     public function destroy(Workspace $workspace, CollaborativeTask $task, GoogleCalendarService $googleCalendar)
@@ -195,23 +164,18 @@ class CollaborativeTaskController extends Controller
 
     private function syncAssigneeCalendars(CollaborativeTask $task, GoogleCalendarService $googleCalendar): void
     {
-        if (!$task->deadline) {
-            return;
-        }
+        if (!$task->deadline) return;
 
         foreach ($task->assignees as $assignee) {
             try {
-                // Pastikan model user memuat relasi/token terbarunya
-                $user = User::find($assignee->id);
-                if ($user) {
-                    $event = $googleCalendar->syncCollaborativeTask($task, $user);
+                // KIRIM $assignee LANGSUNG (JANGAN DIPANGGIL ULANG), KARENA MEMBAWA DATA PIVOT (EVENT ID)!
+                $event = $googleCalendar->syncCollaborativeTask($task, $assignee);
 
-                    if ($event) {
-                        $task->assignees()->updateExistingPivot($user->id, [
-                            'google_calendar_event_id' => $event['id'] ?? null,
-                            'google_calendar_html_link' => $event['htmlLink'] ?? null,
-                        ]);
-                    }
+                if ($event && isset($event['id'])) {
+                    $task->assignees()->updateExistingPivot($assignee->id, [
+                        'google_calendar_event_id' => $event['id'],
+                        'google_calendar_html_link' => $event['htmlLink'] ?? null,
+                    ]);
                 }
             } catch (Throwable $exception) {
                 report($exception);
@@ -222,10 +186,12 @@ class CollaborativeTaskController extends Controller
 
     private function deleteAssigneeCalendarEvent(CollaborativeTask $task, User $assignee, GoogleCalendarService $googleCalendar): void
     {
-        try {
-            $googleCalendar->deleteCollaborativeTask($task, $assignee);
-        } catch (Throwable $exception) {
-            report($exception);
+        if ($assignee->pivot && $assignee->pivot->google_calendar_event_id) {
+            try {
+                $googleCalendar->deleteCollaborativeTask($task, $assignee);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         }
     }
 }

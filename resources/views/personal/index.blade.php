@@ -21,7 +21,7 @@
 {{-- ── Page Header ────────────────────────────────────────────── --}}
 <div class="flex items-end justify-between
             border-b border-[rgba(203,199,182,0.3)] pb-[13px]
-            mb-16">
+            mb-6">
 
     {{-- Judul: Montserrat ExtraBold 48px #1d1c17 --}}
     <h1 class="font-montserrat font-extrabold text-[#1d1c17] tracking-[-0.02em]
@@ -98,7 +98,7 @@
     <div class="overflow-x-auto rounded-xl pb-2">
         <div class="bg-white border border-[rgba(60,0,42,0.1)]
                     rounded-xl shadow-[0px_4px_12px_0px_rgba(106,20,82,0.05)]
-                    overflow-hidden min-w-[600px] min-h-[220px]">
+                    overflow-visible min-w-[600px] min-h-[400px]">
 
             {{-- Table Header --}}
             <div class="bg-[#f8f3eb] border-b border-[rgba(203,199,182,0.3)]
@@ -259,7 +259,7 @@
     <div class="overflow-x-auto rounded-xl pb-2">
         <div class="bg-white border border-[rgba(60,0,42,0.1)]
                     rounded-xl shadow-[0px_4px_12px_0px_rgba(106,20,82,0.05)]
-                    overflow-hidden min-w-[640px] min-h-[220px]">
+                    overflow-visible min-w-[640px] min-h-[400px]">
 
             {{-- Table Header --}}
             <div class="bg-[#f8f3eb] border-b border-[rgba(203,199,182,0.3)]

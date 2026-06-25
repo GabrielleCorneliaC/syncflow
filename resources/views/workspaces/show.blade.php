@@ -1,23 +1,24 @@
 {{-- workspaces/show.blade.php --}}
 @extends('layouts.app')
 @section('title', $workspace->name . ' — Workspace')
+@section('favicon', $workspace->cover_image ?? asset('assets/logo.png'))
 
 @section('content')
 {{-- Alert Notifikasi --}}
 @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-6 relative">
+    <div class="notif-box bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-6 relative">
         {{ session('success') }}
     </div>
 @endif
 
 @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 relative">
+    <div class="notif-box bg-red-100 border border-green-400 text-red-700 px-4 py-3 rounded-xl mb-6 relative">
         {{ session('error') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 relative">
+    <div class="notif-box bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 relative">
         <strong class="font-bold">Gagal menyimpan!</strong>
         <ul class="list-disc pl-5 mt-1 text-sm">
             @foreach($errors->all() as $error)
@@ -26,6 +27,7 @@
         </ul>
     </div>
 @endif
+
     {{-- ══════════════════════════════════════════
          HERO HEADER dengan cover image
          Tinggi dikurangi agar proporsional di dalam
@@ -182,7 +184,7 @@
 
         {{-- Tabel task --}}
         <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden min-h-[220px]" >
+                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]" >
             <table class="w-full border-collapse">
                 <thead>
                     <tr class="border-b border-border text-xs font-bold text-textsoft uppercase bg-gray-50/50">
@@ -438,7 +440,7 @@
         </div>
 
         <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-hidden min-h-[220px]">
+                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border">
@@ -1101,25 +1103,17 @@
 
     // ─── AUTO CLOSE ALERT NOTIFICATION ────────────────────────────────────────
     document.addEventListener("DOMContentLoaded", function() {
-        // Cari elemen notifikasi sukses atau error
-        const flashSuccess = document.getElementById('flash-success');
-        const flashError = document.getElementById('flash-error');
+        // Mencari semua elemen yang punya class 'notif-box'
+        const alerts = document.querySelectorAll('.notif-box');
 
-        // Fungsi untuk menghilangkan elemen setelah 3 detik (3000 milidetik)
-        function fadeOutAlert(element) {
-            if (element) {
-                setTimeout(() => {
-                    element.classList.remove('opacity-100');
-                    element.classList.add('opacity-0'); // Memudarkan
-                    
-                    // Hapus elemen dari HTML setelah animasi pudar selesai (0.5 detik)
-                    setTimeout(() => element.remove(), 500); 
-                }, 3000); 
-            }
-        }
-
-        fadeOutAlert(flashSuccess);
-        fadeOutAlert(flashError);
+        alerts.forEach(element => {
+            setTimeout(() => {
+                element.style.transition = 'opacity 0.5s ease';
+                element.style.opacity = '0';
+                
+                setTimeout(() => element.remove(), 500);
+            }, 3000);
+        });
     });
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     // Menggunakan warna primary brand (#b30084) sesuai tailwind.config layouts.app
