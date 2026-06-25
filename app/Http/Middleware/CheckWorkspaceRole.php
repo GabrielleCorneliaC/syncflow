@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\Auth; // Di-comment dulu karena login belum jadi
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -12,31 +11,52 @@ class CheckWorkspaceRole
 {
     public function handle(Request $request, Closure $next, $role = null): Response
     {
-        // 1. Matikan pengecekan login sementara (Bypass untuk testing)
-        // if (!Auth::check()) {
-        //     return redirect('/login');
-        // }
+        // 1. Ambil ID Workspace dari URL secara aman
+        $workspace = $request->route('workspace');
+        $workspaceId = $workspace instanceof \App\Models\Workspace ? $workspace->id : $workspace;
 
-        // 2. Ambil parameter ID dari URL (Sesuai dengan nama rute {workspace_id})
-        $workspaceId = $request->route('workspace_id');
+        // Jika mengakses lewat Task / Schedule (AJAX status checkbox)
+        if (!$workspaceId && $request->route('task')) {
+            $taskParam = $request->route('task');
+            
+            if ($taskParam instanceof \App\Models\CollaborativeTask) {
+                $workspaceId = $taskParam->workspace_id;
+            } else {
+                $workspaceId = DB::table('collaborative_schedules')
+                    ->where('id', $taskParam)
+                    ->value('workspace_id') 
+                    ?? 
+                    DB::table('collaborative_tasks')
+                    ->where('id', $taskParam)
+                    ->value('workspace_id');
+            }
+        }
 
-        // 3. Cek di tabel pivot (Pakai user_id = 1 sebagai dummy)
+        // 2. Ambil ID user yang sedang login saat ini (Sudah dinamis!)
+        $currentUserId = auth()->id();
+
+        // 3. Cek apakah user ini terdaftar sebagai anggota di workspace ini
         $member = DB::table('workspace_members')
                     ->where('workspace_id', $workspaceId)
-                    ->where('user_id', 1) // <--- Bypass Auth::id() menjadi angka 1
+                    ->where('user_id', $currentUserId)
                     ->first();
 
-        // 4. Kalau bukan member sama sekali, tolak dan kembalikan ke daftar workspace
+        // 4. Kalau namanya GAK ADA di tabel member, langsung TOLAK!
         if (!$member) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'Akses Ditolak: Kamu bukan anggota workspace ini.'], 403);
+            }
             return redirect('/workspaces')->with('error', 'Akses Ditolak: Kamu bukan anggota workspace ini.');
         }
 
-        // 5. Kalau rute butuh role Admin tapi role dia bukan 'admin', tolak
+        // 5. Kalau rute butuh hak 'admin', pastikan kolom role di tabel member bernilai 'admin'
         if ($role === 'admin' && $member->role !== 'admin') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'Akses Ditolak: Hanya Admin yang bisa melakukan ini.'], 403);
+            }
             return redirect()->back()->with('error', 'Akses Ditolak: Hanya Admin yang bisa melakukan ini.');
         }
 
-        // Jika aman, persilakan masuk
         return $next($request);
     }
 }

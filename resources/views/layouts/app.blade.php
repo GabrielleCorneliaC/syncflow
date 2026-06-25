@@ -158,9 +158,9 @@
         </a>
 
         {{-- Collaboration --}}
-        <a href="#"
-           class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition
-                  {{ request()->routeIs('collab.*') ? 'nav-active' : '' }}">
+        <a href="{{ route('workspaces.index') }}"
+        class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition
+                {{ request()->routeIs('workspaces.*') ? 'nav-active' : '' }}">
             <svg class="w-[18px] h-[13px] shrink-0 text-[#767135]" viewBox="0 0 18 13" fill="none">
                 <circle cx="6" cy="4.5" r="3" stroke="currentColor" stroke-width="1.3"/>
                 <circle cx="13" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.3"/>
@@ -169,7 +169,6 @@
             </svg>
             <span class="font-poppins font-medium text-[#767135] text-base leading-6">Collaboration</span>
         </a>
-
         {{-- Profile --}}
         <a href="{{ route('profile.show') }}"
            class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition
@@ -183,7 +182,7 @@
 
         {{-- Slot nav tambahan dari anggota lain --}}
         @yield('sidebar-items')
-
+      
         {{-- Admin --}}
         @if(Auth::user()->isAdmin())
         <div class="mt-3 pt-3 border-t border-[#cbc7b6]">

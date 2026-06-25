@@ -15,8 +15,11 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
-        'google_id',   // ← untuk OAuth Google
+        'google_id',
         'role',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
     ];
 
     protected $hidden = [
@@ -28,32 +31,48 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'password' => 'hashed',
+            'google_access_token' => 'encrypted',
+            'google_refresh_token' => 'encrypted',
+            'google_token_expires_at' => 'datetime',
         ];
     }
 
-    /**
-     * URL avatar: pakai yang sudah disimpan, atau generate dari inisial nama.
-     */
+    public function personalTasks()
+    {
+        return $this->hasMany(PersonalTask::class);
+    }
+
+    public function personalSchedules()
+    {
+        return $this->hasMany(PersonalSchedule::class);
+    }
+
+    public function collaborativeTasks()
+    {
+        return $this->belongsToMany(CollaborativeTask::class, 'collaborative_task_assignees')
+            ->withPivot(['google_calendar_event_id', 'google_calendar_html_link'])
+            ->withTimestamps();
+    }
+
+    public function hasGoogleCalendarConnected(): bool
+    {
+        return filled($this->google_access_token) || filled($this->google_refresh_token);
+    }
+
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
-            // Kalau URL lengkap (dari Google), pakai langsung
             if (str_starts_with($this->avatar, 'http')) {
                 return $this->avatar;
             }
-            // Kalau path lokal (upload manual), pakai storage
             return asset('storage/' . $this->avatar);
         }
 
-        // Fallback: generate avatar dari inisial nama
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name)
             . '&background=b30084&color=fff&size=128&bold=true&format=svg';
     }
 
-    /**
-     * Cek apakah user login via Google (tidak punya password manual).
-     */
     public function isGoogleUser(): bool
     {
         return ! is_null($this->google_id);

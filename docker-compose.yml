@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Service 1: Aplikasi Laravel 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: always
+    ports:
+      - "8000:80" # Akses web di browser lewat localhost:8000
+    volumes:
+      - ./:/var/www/html 
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=syncflow
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword # ini bisa sesuaikan aja ya
+    depends_on:
+      - db 
+
+  # Service 2: Database MySQL
+  db:
+    image: mysql:8.0
+    container_name: laravel_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: syncflow
+      MYSQL_ROOT_PASSWORD: rootpassword # ini bisa sesuaikan aja ya
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql 
+
+volumes:
+  db_data:
