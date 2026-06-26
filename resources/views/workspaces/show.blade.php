@@ -400,8 +400,10 @@
                                     <select name="assignee_id" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
                                         <option value="">— Pilih —</option>
                                         @foreach($workspace->members as $member)
-                                            <option value="{{ $member->user->id }}" {{ $task->assignees->contains('id', $member->user->id) ? 'selected' : '' }}>{{ $member->user->name }}</option>
-                                        @endforeach
+    <option value="{{ $member->id }}" {{ $task->assignees->contains('id', $member->id) ? 'selected' : '' }}>
+        {{ $member->name }}
+    </option>
+@endforeach
                                     </select>
                                 </div>
                             </div>
@@ -813,9 +815,9 @@
             <select name="assignee_id"
                 class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
                 <option value="">— Pilih —</option>
-                @foreach($workspace->members as $member)
-                    <option value="{{ $member->user->id }}">{{ $member->user->name }}</option>
-                @endforeach
+               @foreach($workspace->members as $member)
+    <option value="{{ $member->id }}">{{ $member->name }}</option>
+@endforeach
             </select>
         </div>
     </div>
@@ -1092,8 +1094,10 @@
             </button>
         </div>
 
-        <form id="invite-form" method="POST" action="#" class="space-y-4">
+        {{-- Action form diarahkan ke route yang benar --}}
+        <form id="invite-form" method="POST" action="{{ route('workspaces.members.store', ['workspace' => $workspace->id]) }}" class="space-y-4">
             @csrf
+            
             <div>
                 <label for="invite-email" class="block text-sm font-semibold text-textsoft mb-1.5">
                     Alamat Email
@@ -1104,7 +1108,22 @@
                            text-textmain placeholder:text-texthint
                            focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div class="flex gap-3 pt-1">
+
+            {{-- Tambahan Input Role / Pangkat --}}
+             <div>
+                <label for="invite-role" class="block text-sm font-semibold text-textsoft mb-1.5">
+                 Role
+                </label>
+                <select id="invite-role" name="role" required
+                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                           text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                    <option value="collaborator">Collaborator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+
+            <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeInviteModal()"
                     class="flex-1 py-2.5 rounded-xl text-sm font-semibold
                            text-textsoft bg-muted hover:bg-border border border-border transition-all">
