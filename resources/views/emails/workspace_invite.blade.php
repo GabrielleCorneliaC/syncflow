@@ -1,29 +1,37 @@
-<div style="font-family: Arial, Helvetica, sans-serif; color: #111; max-width: 600px; margin: 0 auto; padding: 20px;">
-    
-    <h2 style="color: #b30084;">Halo! 👋</h2>
-
-    <p style="line-height: 1.6;">
-        <strong>{{ $inviter->name }}</strong> ({{ $inviter->email }}) baru saja mengundang kamu untuk berkolaborasi di workspace <strong>"{{ $workspace->name }}"</strong>.
-    </p>
-
-    @if($workspace->description)
-    <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #C8216B; margin: 15px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #555; font-style: italic;">"{{ $workspace->description }}"</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f4ef; margin: 0; padding: 40px 0; }
+        .container { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 16px; border: 1px solid #cbc7b6; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #b30084, #6a1452); padding: 32px; text-align: center; }
+        .header h1 { color: #fff; font-size: 24px; margin: 0; }
+        .body { padding: 32px; }
+        .body p { color: #3a3a3a; font-size: 15px; line-height: 1.6; }
+        .workspace-name { font-weight: bold; color: #b30084; font-size: 18px; }
+        .btn { display: inline-block; margin-top: 24px; padding: 12px 32px; background: #b30084; color: #fff; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .footer { padding: 16px 32px; background: #f5f4ef; text-align: center; color: #8a8a8a; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 SyncFlow</h1>
+        </div>
+        <div class="body">
+            <p>Halo <strong>{{ $email }}</strong>,</p>
+            <p>Kamu telah diundang untuk bergabung ke workspace:</p>
+            <p class="workspace-name">{{ $workspace->name }}</p>
+            @if($workspace->description)
+            <p style="color:#6a6a6a; font-size:13px;">{{ $workspace->description }}</p>
+            @endif
+            <p>Klik tombol di bawah untuk langsung masuk ke workspace:</p>
+            <a href="{{ url('/workspaces/' . $workspace->id) }}" class="btn">Buka Workspace</a>
+        </div>
+        <div class="footer">
+            Email ini dikirim otomatis oleh SyncFlow. Jangan balas email ini.
+        </div>
     </div>
-    @endif
-
-    <p style="line-height: 1.6;">
-        Undangan ini dikirimkan khusus untuk email kamu: <strong>{{ $email }}</strong>. <br>
-        Silakan login atau daftar di aplikasi SyncFlow menggunakan email tersebut untuk mulai berkolaborasi.
-    </p>
-
-    <div style="margin-top: 30px; margin-bottom: 30px;">
-        <a href="{{ url('/') }}" style="display:inline-block; padding:12px 24px; background:#C8216B; color:#fff; border-radius:8px; text-decoration:none; font-weight: bold;">Buka SyncFlow Sekarang</a>
-    </div>
-
-    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-
-    <p style="font-size:12px; color:#999; line-height: 1.5;">
-        Pesan ini dikirim otomatis oleh sistem SyncFlow. Jika kamu merasa tidak mengenal pengundang atau tidak mengharapkan email ini, silakan abaikan saja ya.
-    </p>
-</div>
+</body>
+</html>
