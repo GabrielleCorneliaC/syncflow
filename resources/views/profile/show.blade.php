@@ -81,27 +81,47 @@
                                   bg-[#b30084] border border-[#894e4b]
                                   shadow-[4px_4px_0px_#894e4b]
                                   flex items-center justify-center
-                                  cursor-pointer hover:bg-[#8c0067] transition">
+                                  cursor-pointer hover:bg-[#8c0067] transition
+                                  group/editbtn"
+                           title="Ganti foto profil">
                         <svg class="w-[10.5px] h-[10.5px] text-white" viewBox="0 0 11 11" fill="none">
                             <path d="M7.5 1.5 L9.5 3.5 L3 10 L1 10 L1 8 L7.5 1.5Z"
                                   stroke="white" stroke-width="1.2" stroke-linejoin="round" fill="none"/>
                             <path d="M6.5 2.5 L8.5 4.5" stroke="white" stroke-width="1.2"/>
                         </svg>
                     </label>
-                    <input id="avatarInput" type="file" name="avatar_preview"
-                           accept="image/*" class="hidden" onchange="previewAvatar(this)">
+
+                    {{-- Input file: terhubung ke infoForm via attribute `form` --}}
+                    <input id="avatarInput"
+                           type="file"
+                           name="avatar"
+                           accept="image/jpeg,image/png,image/webp"
+                           class="hidden"
+                           onchange="previewAvatar(this)"
+                           form="infoForm">
                 </div>
 
                 {{-- Nama + email --}}
                 <div class="py-8 flex flex-col gap-3 text-center sm:text-left">
                     <h1 class="font-poppins font-semibold text-[#894e4b]
                                text-3xl sm:text-4xl lg:text-5xl
-                               leading-[1.1] break-words">
+                               leading-[1.1] break-words" id="displayName">
                         {{ Auth::user()->name }}
                     </h1>
                     <p class="font-inter text-[#7b4240] text-base sm:text-lg lg:text-xl leading-5">
                         {{ Auth::user()->email }}
                     </p>
+
+                    {{-- Preview banner: muncul setelah pilih foto baru --}}
+                    <div id="avatarChangeBanner"
+                         class="hidden items-center gap-2 bg-white/70 border border-[#894e4b]
+                                rounded-lg px-3 py-2 text-xs text-[#894e4b] font-inter font-medium mt-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                        </svg>
+                        <span id="avatarBannerText">Foto baru dipilih — klik Save Changes</span>
+                    </div>
                 </div>
             </div>
 
@@ -120,85 +140,67 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('profile.update.info') }}"
+            <form method="POST"
+                  action="{{ route('profile.update.info') }}"
                   enctype="multipart/form-data"
                   class="relative z-10 flex flex-col gap-6"
                   id="infoForm">
                 @csrf
                 @method('PATCH')
 
-                {{-- Avatar hidden field (dikirim bareng form info) --}}
-                {{-- Avatar dihandle terpisah lewat form avatar, tapi di sini kita sertakan input file juga --}}
-
-                {{-- First Name + Last Name — 2 kolom --}}
+                {{-- First Name + Last Name --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-                    {{-- First Name --}}
                     <div class="flex flex-col gap-1">
-                        <label class="font-inter font-semibold text-[#894e4b] text-xs
-                                      uppercase tracking-[0.6px] leading-4">
+                        <label class="font-inter font-semibold text-[#894e4b] text-xs uppercase tracking-[0.6px] leading-4">
                             First Name
                         </label>
                         <input type="text" name="first_name"
                                value="{{ old('first_name', explode(' ', Auth::user()->name)[0] ?? '') }}"
+                               placeholder="Alex"
                                class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-md
-                                      px-[17px] py-[13px]
-                                      font-inter text-[#1d1c17] text-base leading-6
-                                      focus:outline-none focus:border-[#894e4b] focus:bg-white
-                                      transition
-                                      @error('first_name') border-red-400 @enderror"
-                               placeholder="Alex">
+                                      px-[17px] py-[13px] font-inter text-[#1d1c17] text-base leading-6
+                                      focus:outline-none focus:border-[#894e4b] focus:bg-white transition
+                                      @error('first_name') border-red-400 @enderror">
                         @error('first_name')
                             <p class="text-xs text-red-500 mt-0.5">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    {{-- Last Name --}}
                     <div class="flex flex-col gap-1">
-                        <label class="font-inter font-semibold text-[#894e4b] text-xs
-                                      uppercase tracking-[0.6px] leading-4">
+                        <label class="font-inter font-semibold text-[#894e4b] text-xs uppercase tracking-[0.6px] leading-4">
                             Last Name
                         </label>
                         <input type="text" name="last_name"
                                value="{{ old('last_name', implode(' ', array_slice(explode(' ', Auth::user()->name), 1)) ?: '') }}"
+                               placeholder="Mercer"
                                class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-md
-                                      px-[17px] py-[13px]
-                                      font-inter text-[#1d1c17] text-base leading-6
-                                      focus:outline-none focus:border-[#894e4b] focus:bg-white
-                                      transition
-                                      @error('last_name') border-red-400 @enderror"
-                               placeholder="Mercer">
+                                      px-[17px] py-[13px] font-inter text-[#1d1c17] text-base leading-6
+                                      focus:outline-none focus:border-[#894e4b] focus:bg-white transition
+                                      @error('last_name') border-red-400 @enderror">
                         @error('last_name')
                             <p class="text-xs text-red-500 mt-0.5">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
-                {{-- Email Address — full width --}}
+                {{-- Email --}}
                 <div class="flex flex-col gap-1">
-                    <label class="font-inter font-semibold text-[#894e4b] text-xs
-                                  uppercase tracking-[0.6px] leading-4">
+                    <label class="font-inter font-semibold text-[#894e4b] text-xs uppercase tracking-[0.6px] leading-4">
                         Email Address
                     </label>
                     <input type="email" name="email"
                            value="{{ old('email', Auth::user()->email) }}"
+                           placeholder="you@campus.edu"
                            class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-md
-                                  px-[17px] py-[13px]
-                                  font-inter text-[#1d1c17] text-base leading-6
-                                  focus:outline-none focus:border-[#894e4b] focus:bg-white
-                                  transition
-                                  @error('email') border-red-400 @enderror"
-                           placeholder="you@campus.edu">
+                                  px-[17px] py-[13px] font-inter text-[#1d1c17] text-base leading-6
+                                  focus:outline-none focus:border-[#894e4b] focus:bg-white transition
+                                  @error('email') border-red-400 @enderror">
                     @error('email')
                         <p class="text-xs text-red-500 mt-0.5">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Tombol Save Changes ──────────── --}}
-                {{--
-                    Figma: bg #656026 · border #894e4b · shadow [4px_4px_0_#894e4b]
-                    Poppins Medium 16px white · px-25 py-9 · radius 8px
-                --}}
+                {{-- Save Changes --}}
                 <div class="flex justify-end pt-2">
                     <button type="submit"
                             class="bg-[#656026] border border-[#894e4b]
@@ -432,98 +434,40 @@
      Figma: bg #f8f3eb · border-t #cbc7b6 · shadow-[0px_-4px_6px_rgba(0,0,0,0.05)]
      4 item: Home · Personal · Collab · Profile (aktif = text #b30084)
 ════════════════════════════════════════════════════════════ --}}
-<nav class="fixed bottom-0 left-0 right-0 z-40
-            bg-[#f8f3eb] border-t border-[#cbc7b6]
-            shadow-[0px_-4px_6px_rgba(0,0,0,0.05)]
-            flex items-center justify-around
-            pb-2 pt-[9px] px-2
-            md:hidden">
 
-    {{-- Home --}}
-    <a href="{{ route('dashboard') }}"
-       class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg
-              {{ request()->routeIs('dashboard') ? 'text-[#b30084]' : 'text-[#49473a]' }}">
-        <svg class="w-[18px] h-[18px]" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/>
-            <rect x="11" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/>
-            <rect x="1" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/>
-            <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/>
-        </svg>
-        <span class="font-inter font-medium text-[10px] leading-[15px]">Home</span>
-    </a>
-
-    {{-- Personal --}}
-    <a href="#"
-       class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg
-              {{ request()->routeIs('personal.*') ? 'text-[#b30084]' : 'text-[#49473a]' }}">
-        <svg class="w-[18px] h-[18px]" viewBox="0 0 18 18" fill="none">
-            <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M5 6h8M5 9h8M5 12h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <span class="font-inter font-medium text-[10px] leading-[15px]">Personal</span>
-    </a>
-
-    {{-- Collab --}}
-    <a href="#"
-       class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg
-              {{ request()->routeIs('collab.*') ? 'text-[#b30084]' : 'text-[#49473a]' }}">
-        <svg class="w-[22px] h-[16px]" viewBox="0 0 22 16" fill="none">
-            <circle cx="8" cy="5" r="4" stroke="currentColor" stroke-width="1.4"/>
-            <circle cx="16" cy="5" r="3" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M1 15c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <path d="M17 8c2.761 0 5 2.239 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <span class="font-inter font-medium text-[10px] leading-[15px]">Collab</span>
-    </a>
-
-    {{-- Profile (aktif) --}}
-    <a href="{{ route('profile.show') }}"
-       class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg
-              {{ request()->routeIs('profile.*') ? 'text-[#b30084]' : 'text-[#49473a]' }}">
-        <svg class="w-[16px] h-[16px]" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="4.5" r="3" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M1.5 15c0-3.59 2.91-6.5 6.5-6.5S14.5 11.41 14.5 15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <span class="font-inter font-medium text-[10px] leading-[15px]">Profile</span>
-    </a>
-</nav>
 
 @endsection
 
 
 @push('scripts')
 <script>
-// ── Preview avatar sebelum upload ──────────────────────────
-function previewAvatar(input) {
-    const file = input.files[0];
-    if (!file) return;
+    // 1. Preview gambar saat user pilih file
+    function previewAvatar(input) {
+        const file = input.files[0];
+        if (!file) return;
 
-    // Tampilkan panel upload
-    const panel = document.getElementById('avatarUploadPanel');
-    panel.classList.remove('hidden');
-    panel.classList.add('flex');
+        // Tampilkan panel konfirmasi simpan
+        const panel = document.getElementById('avatarUploadPanel');
+        panel.classList.remove('hidden');
+        panel.classList.add('flex');
 
-    // Preview gambar
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('avatarPreview').src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
 
-    // Salin file ke input form sebenarnya
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    document.getElementById('avatarFileInput').files = dt.files;
+        // Tampilkan nama file
+        const nameEl = document.getElementById('avatarSelectedName');
+        nameEl.textContent = "File: " + file.name;
+        nameEl.classList.remove('hidden');
+        document.getElementById('avatarSaveBtn').classList.remove('hidden');
+    }
 
-    // Tampilkan nama file + tombol simpan
-    const nameEl = document.getElementById('avatarSelectedName');
-    nameEl.textContent = file.name;
-    nameEl.classList.remove('hidden');
-    document.getElementById('avatarSaveBtn').classList.remove('hidden');
-}
-
-function submitAvatarForm() {
-    document.getElementById('avatarForm').submit();
-}
+    // 2. Fungsi ini dijalankan saat tombol "Simpan Foto" diklik
+    // Pastikan tombol di HTML punya onclick="submitAvatarForm()"
+    function submitAvatarForm() {
+        document.getElementById('avatarForm').submit();
+    }
 </script>
 @endpush

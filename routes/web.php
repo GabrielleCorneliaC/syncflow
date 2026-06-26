@@ -30,6 +30,12 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+    // Route untuk menampilkan halaman forgot password
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+
+// Route untuk langsung mereset password tanpa email
+Route::post('/forgot-password', [AuthController::class, 'resetPasswordDirect'])->name('password.update.direct');
 });
 
 /*

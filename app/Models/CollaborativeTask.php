@@ -17,6 +17,11 @@ class CollaborativeTask extends Model
         'attachments_count',
     ];
 
+    public function comments()
+    {
+        // Ingat foreign key-nya sesuai dengan yang ada di controllermu
+        return $this->hasMany(TaskComment::class, 'collaborative_task_id'); 
+    }
     protected function casts(): array
     {
         return [

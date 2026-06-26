@@ -58,12 +58,7 @@
                             </div>
 
                             <div class="relative z-30 p-4 h-full flex flex-col justify-between">
-                                <div class="flex justify-end">
-                                    <button onclick="event.preventDefault(); openInviteModal({{ $ws->id }})"
-                                        class="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 text-white backdrop-blur-sm">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                                    </button>
-                                </div>
+                               
                                 <div>
                                     <p class="text-white font-bold text-lg leading-tight mb-1 line-clamp-1">{{ $ws->name }}</p>
                                     @if($ws->description)
@@ -72,11 +67,11 @@
                                     
                                     <div class="flex items-center -space-x-1.5">
                                         @foreach($ws->members->take(3) as $member)
-                                        <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=b30084&color=fff' }}" class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover">
+                                            <img src="{{ $member->profile_picture 
+                                                ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
+                                                class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                                title="{{ $member->name }}">
                                         @endforeach
-                                        @if($ws->members->count() > 3)
-                                        <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
-                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -87,15 +82,7 @@
                             {{-- Trik CSS menutupi border bawah tab --}}
                             <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#f4a3a4] -translate-y-[1px] z-20"></div>
 
-                            <div class="flex items-start justify-between relative z-30">
-                                <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/20 text-[10px] font-bold text-[#3a3a3a]">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    OWNER
-                                </div>
-                                <button onclick="event.preventDefault(); openInviteModal({{ $ws->id }})" class="text-[#4a4a4a] hover:text-black transition-colors">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                                </button>
-                            </div>
+                            
 
                             <div class="relative z-30">
                                 <h3 class="font-semibold text-lg text-[#2a2a2a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
@@ -103,13 +90,11 @@
 
                             <div class="flex -space-x-1.5 relative z-30">
                                 @foreach($ws->members->take(3) as $member)
-                                <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=random' }}" class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover">
+                                    <img src="{{ $member->profile_picture 
+                                        ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
+                                        class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                        title="{{ $member->name }}">
                                 @endforeach
-                                @if($ws->members->count() > 3)
-                                <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#f4a3a4] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
-                                    +{{ $ws->members->count() - 3 }}
-                                </div>
-                                @endif
                             </div>
                         </div>
                     @endif
@@ -142,121 +127,141 @@
     </div>
 
     {{-- ===================== SHARED WITH ME ===================== --}}
-    <div id="panel-shared" class="hidden">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 pt-8">
-            
-            @forelse($sharedWorkspaces ?? [] as $ws)
-            <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
-                <div class="relative">
-                    
-                    {{-- Tab Atas Folder (Selalu Beige/Abu untuk Shared) --}}
-                    <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#e6e4df] z-20 flex items-center px-3">
-                        <span class="text-[10px] font-bold text-[#4a4a4a] flex items-center gap-1.5">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                            SHARED
-                        </span>
-                    </div>
+<div id="panel-shared" class="hidden">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 pt-8">
+        
+        @forelse($sharedWorkspaces ?? [] as $ws)
+        @php
+            $myMember = $ws->members->firstWhere('id', auth()->id());
+            $roleLabel = $myMember ? strtoupper($myMember->pivot->role) : 'SHARED';
+        @endphp
+        <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
+            <div class="relative">
+                
+                {{-- Tab Atas Folder — tampilkan ADMIN / COLLABORATOR --}}
+                <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#e6e4df] z-20 flex items-center px-3">
+                    <span class="text-[10px] font-bold text-[#4a4a4a] flex items-center gap-1.5">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        {{ $roleLabel }}
+                    </span>
+                </div>
 
-                    @if($ws->cover_image)
-                        {{-- STYLE 1: DENGAN GAMBAR --}}
-                        <div class="relative z-10 w-full h-[180px] border border-[#cbc7b6] rounded-b-xl rounded-tr-xl overflow-hidden shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all bg-muted">
-                            <div class="absolute inset-0">
-                                <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);"></div>
-                            </div>
-                            <div class="relative z-30 p-4 h-full flex flex-col justify-end">
-                                <p class="text-white font-bold text-lg leading-tight mb-3 line-clamp-2">{{ $ws->name }}</p>
-                                <div class="flex items-center -space-x-1.5">
-                                    @foreach($ws->members->take(3) as $member)
-                                    <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover">
-                                    @endforeach
-                                    @if($ws->members->count() > 3)
-                                    <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
-                                    @endif
-                                </div>
-                            </div>
+                @if($ws->cover_image)
+                    {{-- STYLE 1: DENGAN GAMBAR --}}
+                    <div class="relative z-10 w-full h-[180px] border border-[#cbc7b6] rounded-b-xl rounded-tr-xl overflow-hidden shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all bg-muted">
+                        <div class="absolute inset-0">
+                            <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);"></div>
                         </div>
-                    @else
-                        {{-- STYLE 2: TANPA GAMBAR (Folder Beige/Abu Solid sesuai desain image_c15ae2.png) --}}
-                        <div class="relative z-10 w-full h-[180px] bg-[#e6e4df] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
-                            <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#e6e4df] -translate-y-[1px] z-20"></div>
-
-                            <div class="flex items-start justify-between relative z-30">
-                                <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/30 text-[10px] font-bold text-[#4a4a4a]">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    SHARED
-                                </div>
-                                {{-- Tombol invite biasanya tidak aktif untuk shared, di sini hanya menampilkan icon --}}
-                                <div class="text-[#6a6a6a]">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                                </div>
-                            </div>
-
-                            <div class="relative z-30">
-                                <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
-                            </div>
-
-                            <div class="flex -space-x-1.5 relative z-30">
+                        <div class="relative z-30 p-4 h-full flex flex-col justify-end">
+                            <p class="text-white font-bold text-lg leading-tight mb-3 line-clamp-2">{{ $ws->name }}</p>
+                            <div class="flex items-center -space-x-1.5">
                                 @foreach($ws->members->take(3) as $member)
-                                <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=random' }}" class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover">
+                                {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
+                                <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}"
+                                    class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                    title="{{ $member->name }}">
                                 @endforeach
                                 @if($ws->members->count() > 3)
-                                <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#e6e4df] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
-                                    +{{ $ws->members->count() - 3 }}
-                                </div>
+                                <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
                                 @endif
                             </div>
                         </div>
-                    @endif
-                </div>
-            </a>
-            @empty
-            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <h3 class="font-heading font-semibold text-textmain mb-1">Belum Ada Data</h3>
-                <p class="text-sm text-textsoft">Belum ada workspace yang dibagikan ke kamu.</p>
+                    </div>
+                @else
+                    {{-- STYLE 2: TANPA GAMBAR --}}
+                    <div class="relative z-10 w-full h-[180px] bg-[#e6e4df] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
+                        <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#e6e4df] -translate-y-[1px] z-20"></div>
+
+                        <div class="flex items-start justify-between relative z-30">
+                            {{-- ✅ Fix: label role dinamis --}}
+                            <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/30 text-[10px] font-bold text-[#4a4a4a]">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                {{ $roleLabel }}
+                            </div>
+                            <div class="text-[#6a6a6a]">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="relative z-30">
+                            <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
+                        </div>
+
+                        <div class="flex -space-x-1.5 relative z-30">
+                            @foreach($ws->members->take(3) as $member)
+                            {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
+                            <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=random' }}"
+                                class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover"
+                                title="{{ $member->name }}">
+                            @endforeach
+                            @if($ws->members->count() > 3)
+                            <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#e6e4df] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
+                                +{{ $ws->members->count() - 3 }}
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
-            @endforelse
+        </a>
+        @empty
+        <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+            <h3 class="font-heading font-semibold text-textmain mb-1">Belum Ada Data</h3>
+            <p class="text-sm text-textsoft">Belum ada workspace yang dibagikan ke kamu.</p>
         </div>
+        @endforelse
     </div>
+</div>
 
     {{-- ===================== MODAL: CREATE WORKSPACE ===================== --}}
-    <div id="modal-create" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    {{-- 1. Gege ubah items-end sm:items-center jadi items-center saja biar selalu di tengah --}}
+    <div id="modal-create" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div onclick="closeCreateModal()" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10 border border-border">
-            <div class="flex items-center justify-between mb-5">
+        
+        {{-- 2. Box Putih: Gege tambahkan flex flex-col dan max-h-[90vh] biar tingginya terukur --}}
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 border border-border flex flex-col max-h-[90vh]">
+            
+            {{-- Header: Gege pisahkan dan kasih flex-shrink-0 biar dia tetap nangkring di atas --}}
+            <div class="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b border-gray-100">
                 <h2 class="font-heading font-bold text-xl text-textmain">Buat Workspace Baru</h2>
                 <button onclick="closeCreateModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-textsoft">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <form action="{{ route('workspaces.store') }}" method="POST">
+            {{-- 3. Form: Gege jadikan area scrollable (flex-1 overflow-y-auto) --}}
+            <form action="{{ route('workspaces.store') }}" method="POST" class="flex-1 overflow-y-auto p-6 pt-4 flex flex-col">
                 @csrf
                 @if ($errors->any())
-                    <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
+                    <div class="mb-3 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
                         @foreach ($errors->all() as $error)
                             <p>• {{ $error }}</p>
                         @endforeach
                     </div>
                 @endif
 
-                <div class="mb-4">
+                {{-- Input 1: Gege ubah py-2.5 jadi py-2 dan mb-4 jadi mb-3 biar lebih langsing --}}
+                <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Nama Workspace</label>
                     <input type="text" name="name" required placeholder="e.g. Kepanitiaan BEM 2026"
-                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                        class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                <div class="mb-4">
+                {{-- Input 2: Sama, py-2 dan mb-3 --}}
+                <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Deskripsi Singkat</label>
                     <input type="text" name="description" placeholder="Deskripsi singkat workspace (opsional)"
-                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                        class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                <div class="mb-5">
+                {{-- Input 3 (Unsplash) --}}
+                <div class="mb-2 flex-1">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Foto Cover (Opsional)</label>
                     <div class="flex gap-2 mb-2">
+                        {{-- Kotak pencarian juga dibikin langsing py-2 --}}
                         <input type="text" id="unsplash-query" placeholder="Cari foto (e.g. teamwork, nature...)"
-                            class="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                            class="flex-1 border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                         <button type="button" onclick="searchUnsplash()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors">Cari</button>
                     </div>
                     <div id="unsplash-results" class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto hidden"></div>
@@ -269,16 +274,18 @@
                     </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeCreateModal()" class="flex-1 py-2.5 bg-muted text-textsoft font-semibold rounded-xl border border-border hover:bg-gray-100 transition-colors">Batal</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">Buat Workspace</button>
+                {{-- 4. Footer: Gege kasih mt-auto biar tombolnya selalu terdorong ke paling bawah --}}
+                <div class="flex gap-3 mt-auto pt-3">
+                    <button type="button" onclick="closeCreateModal()" class="flex-1 py-2 bg-muted text-textsoft font-semibold rounded-xl border border-border hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="flex-1 py-2 bg-primary text-white font-semibold rounded-xl shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">Buat Workspace</button>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- ===================== MODAL: INVITE MEMBER ===================== --}}
-    <div id="modal-invite" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+    <div id="modal-invite" 
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div onclick="closeInviteModal()" class="absolute inset-0"></div>
         <div class="w-full max-w-md p-8 bg-white border border-border shadow-2xl rounded-3xl relative z-10">
             <h2 class="text-2xl font-heading font-bold text-center text-textmain mb-6">Undang Anggota via Email</h2>
@@ -383,25 +390,6 @@
 
     document.getElementById('unsplash-query')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchUnsplash(); } });
 
-    function openInviteModal(workspaceId) {
-        let id = workspaceId;
-        if (!id) {
-            const parts = window.location.pathname.split('/').filter(Boolean);
-            const idx = parts.indexOf('workspaces');
-            if (idx !== -1 && parts.length > idx + 1) id = parts[idx + 1];
-        }
-        if (!id) return alert('Workspace ID tidak ditemukan.');
-
-        const form = document.getElementById('invite-form');
-        form.action = `/workspaces/${id}/members`;
-        document.getElementById('modal-invite').classList.remove('hidden');
-    }
-
-    function closeInviteModal() {
-        document.getElementById('modal-invite').classList.add('hidden');
-        const form = document.getElementById('invite-form');
-        form.action = '#';
-        form.reset();
-    }
+   
 </script>
 @endpush

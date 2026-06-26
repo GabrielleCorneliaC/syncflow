@@ -24,13 +24,16 @@
                     </h1>
 
                     <div class="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                        <span>📎 {{ $task->comments->whereNotNull('attachment_path')->count() }} files attached</span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" /></svg>
+                            {{ $task->comments->whereNotNull('attachment_path')->count() }} files attached
+                        </span>
                         <span>•</span>
                         <span>{{ ucfirst($task->status ?? 'pending') }}</span>
                     </div>
                 </div>
 
-                <a href="{{ route('workspaces.show', $workspace_id) }}"
+                <a href="{{ route('workspaces.show', $workspace->id) }}"
                    class="w-9 h-9 flex items-center justify-center rounded-full text-2xl text-gray-500 hover:bg-white hover:text-gray-900 transition">
                     ×
                 </a>
@@ -64,7 +67,8 @@
                                         <a href="{{ asset('storage/' . $comment->attachment_path) }}"
                                           download
                                            class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
-                                            📄 Download Attachment
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                                            Download Attachment
                                         </a>
                                     </div>
                                 @endif
@@ -89,12 +93,9 @@
                              class="w-full border border-gray-300 rounded-2xl px-5 py-3 focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-100 transition">
 
                             <div id="file-preview" class="hidden items-center gap-2 mb-2 bg-pink-50 border border-pink-100 rounded-xl px-3 py-2">
-                                <span class="text-sm">📎</span>
+                                <svg class="w-4 h-4 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" /></svg>
                                 <span id="file-preview-name" class="text-xs font-medium text-gray-700 truncate flex-1"></span>
-                                <button type="button" id="remove-file-btn"
-                                        class="text-gray-400 hover:text-pink-600 text-sm font-bold leading-none px-1">
-                                    ×
-                                </button>
+                                <button type="button" id="remove-file-btn" class="text-gray-400 hover:text-pink-600 text-sm font-bold leading-none px-1">×</button>
                             </div>
 
                             <textarea name="comment" rows="2"
@@ -103,7 +104,8 @@
                         </div>
 
                         <label class="mt-3 inline-flex items-center gap-2 text-xs text-pink-700 font-semibold bg-pink-50 px-4 py-2 rounded-xl cursor-pointer hover:bg-pink-100 transition">
-                            📎 Choose File
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" /></svg>
+                            Choose File
                             <input type="file" name="attachment" id="attachment-input" class="hidden">
                         </label>
                     </div>
@@ -184,7 +186,7 @@ form.addEventListener('submit', async function (e) {
     statusText.classList.remove('hidden');
 
     try {
-        const response = await fetch("{{ route('task-comments.store') }}", {
+        const response = await fetch("{!! route('task-comments.store', ['workspace' => $workspace->id, 'task' => $task->id]) !!}", {
             method: "POST",
             headers: {
                 "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -212,12 +214,13 @@ form.addEventListener('submit', async function (e) {
             ? `
                 <div class="mt-3">
                     <a href="/storage/${comment.attachment_path}"
-                       download
-                       class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
-                        📄 Download Attachment
+                    download
+                    class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:text-pink-600">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                        Download Attachment
                     </a>
                 </div>
-              `
+            `
             : '';
 
         const item = document.createElement('div');

@@ -33,18 +33,19 @@
          Tinggi dikurangi agar proporsional di dalam
          main content yang sudah punya padding dari layouts.app
     ══════════════════════════════════════════ --}}
-    <div class="relative overflow-hidden rounded-2xl border border-border
+    <div class="relative overflow-visible rounded-2xl border border-border
                 shadow-[3px_3px_0px_#cbc7b6] mb-6"
          style="height: 156px;">
 
-        {{-- Cover image / fallback gradient brand --}}
+        {{-- Cover image / fallback gradient brand — Tambahkan rounded-2xl di sini --}}
         @if($workspace->cover_image)
             <img src="{{ $workspace->cover_image }}" alt="{{ $workspace->name }}"
-                 class="w-full h-full object-cover">
+                 class="w-full h-full object-cover rounded-2xl">
         @else
-            <div class="w-full h-full bg-gradient-to-br from-accent to-primary"></div>
+            <div class="w-full h-full bg-gradient-to-br from-accent to-primary rounded-2xl"></div>
         @endif
-        <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent"></div>
+        {{-- Tambahkan juga rounded-2xl di overlay hitamnya --}}
+        <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent rounded-2xl"></div>
 
         {{-- Back + Title --}}
         <div class="absolute inset-0 flex items-center px-6">
@@ -57,7 +58,7 @@
                     </svg>
                     Back to Workspaces
                 </a>
-                <h1 class="font-heading font-bold text-5xl text-white">{{ $workspace->name }}</h1>
+                <h1 class="font-heading font-bold text-4xl text-white">{{ $workspace->name }}</h1>
                 @if($workspace->description)
                 <p class="text-white/70 text-xs mt-0.5">{{ $workspace->description }}</p>
                 @endif
@@ -66,41 +67,59 @@
 
         {{-- Admin actions — hanya owner --}}
         @if(!empty($isOwner))
-        <div class="absolute top-4 right-5 flex items-center gap-2 z-20">
+        <div class="absolute top-4 right-5 flex items-center z-20" x-data="{ openHeader: false }">
 
-            {{-- Connect Google Calendar --}}
-            <a href="{{ route('google.calendar.redirect') }}"
-               class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-gray-700 hover:bg-white transition-all">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
-                    <path d="M7 8h10M7 12h10M7 16h6"/>
-                </svg>
-                {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
-            </a>
+            {{-- TAMPILAN DESKTOP (Sembunyi di Mobile) --}}
+            <div class="hidden md:flex items-center gap-2">
+                <a href="{{ route('google.calendar.redirect') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-gray-700 hover:bg-white transition-all">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+                    {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
+                </a>
+                <button onclick="openInviteModal({{ $workspace->id }})" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-primary hover:bg-white transition-all">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Invite
+                </button>
+                <button onclick="openEditWorkspaceModal()" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-textmain hover:bg-white transition-all">Edit</button>
+                <button onclick="openModal('modal-delete-workspace')" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">Delete</button>
+            </div>
 
-            {{-- Invite --}}
-            <button onclick="openInviteModal({{ $workspace->id }})"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-primary hover:bg-white transition-all">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <line x1="19" y1="8" x2="19" y2="14"/>
-                    <line x1="22" y1="11" x2="16" y2="11"/>
-                </svg>
-                Invite
-            </button>
+            {{-- TAMPILAN MOBILE (Kebab Menu, Sembunyi di Desktop) --}}
+            <div class="md:hidden relative">
+                <button @click="openHeader = !openHeader" @click.outside="openHeader = false"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 text-textmain shadow-sm">
+                    <svg class="w-1 h-4" viewBox="0 0 4 16" fill="currentColor">
+                        <circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/>
+                    </svg>
+                </button>
 
-            {{-- Edit --}}
-            <button onclick="openEditWorkspaceModal()"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-textmain hover:bg-white transition-all">
-                Edit
-            </button>
+                <div x-show="openHeader" style="display: none;" x-transition
+                    class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-xl shadow-lg py-1 z-[9999]">
+                    
+                    {{-- Tombol Google Calendar (Tambah active:bg-gray-200) --}}
+                    <a href="{{ route('google.calendar.redirect') }}" 
+                    class="block w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 transition-colors duration-200">
+                        {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
+                    </a>
 
-            {{-- Delete --}}
-            <button onclick="openModal('modal-delete-workspace')"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">
-                Delete
-            </button>
+                    {{-- Tombol Invite (Tambah active:bg-[#ffdbed] biar pas ditekan pinknya lebih nyata) --}}
+                    <button onclick="openInviteModal({{ $workspace->id }})" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-primary hover:bg-[#FFF0F6] hover:text-[#a6007a] active:bg-[#ffdbed] transition-colors duration-200">
+                        Invite
+                    </button>
+
+                    {{-- Tombol Edit Workspace (Tambah active:bg-gray-200) --}}
+                    <button onclick="openEditWorkspaceModal()" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-textmain hover:bg-gray-100 hover:text-black active:bg-gray-200 transition-colors duration-200">
+                        Edit Workspace
+                    </button>
+
+                    {{-- Tombol Delete Workspace (Tambah active:bg-red-100) --}}
+                    <button onclick="openModal('modal-delete-workspace')" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100 transition-colors duration-200">
+                        Delete Workspace
+                    </button>
+                </div>
+            </div>
         </div>
         @endif
     </div>
@@ -111,7 +130,7 @@
          brand (#b30084) sesuai layouts.app
     ══════════════════════════════════════════ --}}
     <div class="border-b border-border mb-6">
-        <div class="flex gap-1">
+        <div class="flex gap-1 overflow-x-auto whitespace-nowrap pb-1">
 
             {{-- Tab: List Task --}}
             <button onclick="switchTab('task')" id="tab-task"
@@ -183,9 +202,8 @@
         </div>
 
         {{-- Tabel task --}}
-        <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]" >
-            <table class="w-full border-collapse">
+        <div class="bg-surface rounded-2xl border border-border shadow-[2px_2px_0px_#cbc7b6] overflow-x-auto min-h-[400px]" >
+            <table class="w-full border-collapse min-w-[800px]">
                 <thead>
                     <tr class="border-b border-border text-xs font-bold text-textsoft uppercase bg-gray-50/50">
                         <th class="px-5 py-3 w-12 text-center">Check</th>
@@ -197,138 +215,143 @@
                 </thead>
                 <tbody class="divide-y divide-gray-150">
                    @forelse($workspace->collaborativeTasks as $task)
-        <tr class="hover:bg-muted/50 transition-colors">
+                    <tr class="hover:bg-muted/50 transition-colors">
 
-        {{-- Checkbox status --}}
-        <td class="px-5 py-4 text-center">
-            <div class="flex items-center justify-center gap-2">
-                <input type="checkbox"
-                    {{ $task->status === 'done' ? 'checked' : '' }}
-                    onchange="updateTaskStatus({{ $task->id }}, this.checked)"
-                    class="w-4 h-4 rounded cursor-pointer"
-                    style="accent-color: #b30084;">
-                <span id="loading-{{ $task->id }}" class="hidden text-[10px] text-primary animate-pulse">Saving...</span>
-            </div>
-        </td>
+                        {{-- 1. Checkbox status --}}
+                        <td class="px-5 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <input type="checkbox"
+                                    {{ $task->status === 'done' ? 'checked' : '' }}
+                                    onchange="updateTaskStatus({{ $task->id }}, this.checked)"
+                                    class="w-4 h-4 rounded cursor-pointer"
+                                    style="accent-color: #b30084;">
+                                <span id="loading-{{ $task->id }}" class="hidden text-[10px] text-primary animate-pulse">Saving...</span>
+                            </div>
+                        </td>
 
-        {{-- Nama Tugas + Badge Status --}}
-        <td class="px-4 py-4 text-center">
-            @php
-                $statusConfig = [
-                    'todo'    => ['bg-blue-100 text-blue-700', 'To Do'],
-                    'done'    => ['bg-green-100 text-green-700', 'Completed'],
-                    'pending' => ['bg-yellow-100 text-yellow-700', 'Pending'],
-                    'overdue' => ['bg-red-100 text-red-600', 'Overdue'],
-                ];
-                $sc = $statusConfig[$task->status] ?? ['bg-yellow-100 text-yellow-700', strtoupper($task->status)];
-            @endphp
-            <span id="badge-status-{{ $task->id }}" class="inline-block text-xs font-semibold px-2 py-0.5 rounded-md {{ $sc[0] }}">
-                {{ $sc[1] }}
-            </span>
-        </td>
+                        {{-- 2. Badge Status --}}
+                        <td class="px-4 py-4 text-center">
+                            @php
+                                $isOverdue = !empty($task->deadline) 
+                                            && \Carbon\Carbon::parse($task->deadline)->isPast() 
+                                            && strtolower($task->status) !== 'done';
+                                            
+                                $computedStatus = $isOverdue ? 'overdue' : strtolower($task->status);
 
-        {{-- Detail Konten Tugas Kelompok --}}
-        <td class="px-4 py-4 text-left">
-            <p class="font-semibold text-textmain leading-tight">{{ $task->name }}</p>
-            @if($task->description)
-                <p class="text-xs text-textsoft mt-1 leading-relaxed">{{ $task->description }}</p>
-            @endif
-            
-            <div class="flex items-center gap-4 mt-2 text-xs flex-wrap">
-                {{-- Batas Waktu / Deadline Kelompok --}}
-                @php $isOverdue = $task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast() && $task->status !== 'done'; @endphp
-                <span class="flex items-center gap-1 {{ $isOverdue ? 'text-red-500 font-semibold' : 'text-textsoft' }}">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="3" y="4" width="18" height="18" rx="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('M d, H:i') : '—' }}
-                    @if($isOverdue) <span class="text-xs text-red-400 ml-1">⚠️ Overdue</span> @endif
-                </span>
+                                $statusConfig = [
+                                    'todo'    => ['bg-blue-100 text-blue-700', 'To Do'],
+                                    'done'    => ['bg-green-100 text-green-700', 'Completed'],
+                                    'pending' => ['bg-yellow-100 text-yellow-700', 'Pending'],
+                                    'review'  => ['bg-purple-100 text-purple-700', 'Review'],
+                                    'overdue' => ['bg-red-100 text-red-600', 'Overdue'],
+                                ];
+                                
+                                $sc = $statusConfig[$computedStatus] ?? ['bg-gray-100 text-gray-700', strtoupper($computedStatus)];
+                            @endphp
+                            
+                            <span id="badge-status-{{ $task->id }}" class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md {{ $sc[0] }}">
+                                {{ $sc[1] }}
+                            </span>
+                        </td>
 
-                {{-- Penerima Tugas / Assignee Kelompok (Mendukung Multi-User) --}}
-                <div class="flex items-center gap-1">
-                    @if($task->assignees->isNotEmpty())
-                        <div class="flex -space-x-1.5 overflow-hidden mr-1">
-                            @foreach($task->assignees as $assignee)
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode($assignee->name) }}&size=20&background=b30084&color=fff"
-                                     class="w-5 h-5 rounded-full border border-white object-cover"
-                                     title="{{ $assignee->name }}">
-                            @endforeach
-                        </div>
-                        <span class="text-xs text-textmain font-medium">{{ $task->assignees->pluck('name')->implode(', ') }}</span>
-                    @else
-                        <span class="text-xs text-texthint italic">Belum ada assignee</span>
-                    @endif
-                </div>
-            </div>
-        </td>
+                        {{-- 3. Detail Konten Tugas (Nama, Tanggal, dan Assignee sejajar) --}}
+                        <td class="px-4 py-4 text-left">
+                            <p class="font-bold text-textmain mb-1.5 text-base">{{ $task->name }}</p>
+                            
+                            <div class="flex items-center gap-4 text-xs text-texthint">
+                                {{-- Tanggal Deadline --}}
+                                @if($task->deadline)
+                                <div class="flex items-center gap-1.5">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-texthint">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span>{{ \Carbon\Carbon::parse($task->deadline)->format('M d, H:i') }}</span>
+                                </div>
+                                @endif
 
-        {{-- Progres Batang Kelompok (Pintar: Otomatis 100% jika dicentang, kembali ke data awal jika di-uncheck) --}}
-        <td class="px-4 py-4 w-40">
-            @php
-                $displayProgress = ($task->status === 'done') ? 100 : $task->progress;
-            @endphp
-            <div class="flex items-center gap-2 justify-end">
-                <div class="w-24 bg-muted rounded-full h-1.5">
-                    <div id="progress-bar-{{ $task->id }}" class="h-1.5 rounded-full transition-all"
-                        style="width: {{ $displayProgress }}%; background: {{ $displayProgress >= 100 ? '#22C55E' : '#b30084' }};"></div>
-                </div>
-                <span id="progress-text-{{ $task->id }}" class="text-xs font-semibold text-texthint w-8 text-right">
-                    {{ $displayProgress }}%
-                </span>
-            </div>
-        </td>
+                                {{-- Assignee --}}
+                                <div class="flex items-center gap-1.5">
+                                    @if($task->assignees->isNotEmpty())
+                                        <div class="flex -space-x-1.5 overflow-hidden">
+                                            @foreach($task->assignees as $assignee)
+                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($assignee->name) }}&size=20&background=b30084&color=fff"
+                                                    class="w-5 h-5 rounded-full border border-white object-cover shadow-sm"
+                                                    title="{{ $assignee->name }}">
+                                            @endforeach
+                                        </div>
+                                        <span class="font-medium text-textmain">{{ $task->assignees->pluck('name')->implode(', ') }}</span>
+                                    @else
+                                        <span class="italic">Belum ada assignee</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
 
-        {{-- Aksi ke Detail / Fitur Obrolan Chat & Dropdown Edit/Delete --}}
-        <td class="px-4 py-4 text-center">
-            <div class="flex justify-center items-center gap-1 relative" x-data="{ open: false }">
-                
-                {{-- Tombol Detail / Obrolan (Ikon Asli) --}}
-                <a href="{{ route('workspaces.tasks.show', ['workspace' => $workspace->id, 'task' => $task->id]) }}"
-                   class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-primary hover:bg-accent/40 transition-colors" title="Buka Detail & Chat">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                    </svg>
-                </a>
+                        {{-- 4. Progres Batang --}}
+                        <td class="px-4 py-4 w-40">
+                            @php
+                                $displayProgress = ($task->status === 'done') ? 100 : $task->progress;
+                            @endphp
+                            <div class="flex items-center gap-3 justify-end">
+                                <div class="w-24 bg-muted rounded-full h-2">
+                                    <div id="progress-bar-{{ $task->id }}" class="h-2 rounded-full transition-all"
+                                        style="width: {{ $displayProgress }}%; background: {{ $displayProgress >= 100 ? '#22C55E' : '#b30084' }};"></div>
+                                </div>
+                                <span id="progress-text-{{ $task->id }}" class="text-xs font-semibold text-texthint w-8 text-right">
+                                    {{ $displayProgress }}%
+                                </span>
+                            </div>
+                        </td>
 
-                @if(!empty($isOwner))
-                {{-- Tombol Titik Tiga (Hanya muncul jika dia owner/admin) --}}
-                <button @click="open = !open"
-                        class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-textmain hover:bg-muted transition-colors">
-                    <svg class="w-1 h-4" viewBox="0 0 4 16" fill="currentColor">
-                        <circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/>
-                    </svg>
-                </button>
+                        {{-- 5. Aksi ke Detail & Dropdown --}}
+                        <td class="px-4 py-4 text-center">
+                            <div class="flex justify-center items-center gap-2 relative" x-data="{ open: false }">
+                                
+                                {{-- Tombol Chat --}}
+                                <a href="{{ route('workspaces.tasks.show', ['workspace' => $workspace->id, 'task' => $task->id]) }}"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg text-texthint hover:text-primary hover:bg-accent/40 transition-colors" title="Buka Detail & Chat">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                </a>
 
-                {{-- Menu Dropdown Edit/Hapus --}}
-                <div x-show="open" @click.outside="open = false"
-                     x-transition:enter="transition ease-out duration-100"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     class="absolute right-0 top-full mt-1 z-20 w-36 bg-white border border-border rounded-xl shadow-lg py-1 text-left">
-                    <button @click="open=false; openModal('modal-edit-collab-task-{{ $task->id }}')"
-                            class="w-full text-left px-4 py-2 text-sm text-textmain hover:bg-muted transition">
-                        Edit Tugas
-                    </button>
-                    <button @click="open=false; openModal('modal-delete-collab-task-{{ $task->id }}')"
-                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
-                        Hapus
-                    </button>
-                </div>
-                @endif
-            </div>
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="5" class="text-center py-12 text-texthint text-sm">
-                Belum ada tugas kelompok. Silakan tambah tugas baru!
-            </td>
-        </tr>
-    @endforelse   
+                                @if(!empty($isOwner))
+                                {{-- Tombol Titik Tiga Vertikal --}}
+                                <button @click="open = !open"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-texthint hover:text-textmain hover:bg-muted transition-colors">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                                    </svg>
+                                </button>
+
+                                <div x-show="open" @click.outside="open = false"
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    class="absolute right-0 top-full mt-1 z-20 w-36 bg-white border border-border rounded-xl shadow-lg py-1 text-left">
+                                    <button @click="open=false; openModal('modal-edit-collab-task-{{ $task->id }}')"
+                                            class="w-full text-left px-4 py-2 text-sm text-textmain hover:bg-muted transition">
+                                        Edit Tugas
+                                    </button>
+                                    <button @click="open=false; openModal('modal-delete-collab-task-{{ $task->id }}')"
+                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                                        Hapus
+                                    </button>
+                                </div>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-12 text-texthint text-sm">
+                            Belum ada tugas kelompok. Silakan tambah tugas baru!
+                        </td>
+                    </tr>
+                @endforelse   
                 </tbody>
             </table>
             
@@ -377,8 +400,10 @@
                                     <select name="assignee_id" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
                                         <option value="">— Pilih —</option>
                                         @foreach($workspace->members as $member)
-                                            <option value="{{ $member->user->id }}" {{ $task->assignees->contains('id', $member->user->id) ? 'selected' : '' }}>{{ $member->user->name }}</option>
-                                        @endforeach
+    <option value="{{ $member->id }}" {{ $task->assignees->contains('id', $member->id) ? 'selected' : '' }}>
+        {{ $member->name }}
+    </option>
+@endforeach
                                     </select>
                                 </div>
                             </div>
@@ -439,9 +464,8 @@
             </button>
         </div>
 
-        <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]">
-            <table class="w-full text-sm">
+        <div class="bg-surface rounded-2xl border border-border shadow-[2px_2px_0px_#cbc7b6] overflow-x-auto min-h-[400px]">
+            <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-border">
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-texthint uppercase tracking-wider w-4"></th>
@@ -791,9 +815,9 @@
             <select name="assignee_id"
                 class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
                 <option value="">— Pilih —</option>
-                @foreach($workspace->members as $member)
-                    <option value="{{ $member->user->id }}">{{ $member->user->name }}</option>
-                @endforeach
+               @foreach($workspace->members as $member)
+    <option value="{{ $member->id }}">{{ $member->name }}</option>
+@endforeach
             </select>
         </div>
     </div>
@@ -955,14 +979,17 @@
 
 {{-- ════ MODAL: EDIT WORKSPACE ════ --}}
 <div id="modal-edit-workspace"
-     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
-         class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+         class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+         
+    {{-- 1. Box Putih: Tambahkan flex flex-col dan max-h-[90vh] --}}
     <div class="relative bg-surface rounded-2xl border border-border
                 shadow-[6px_6px_0px_#cbc7b6]
-                w-full max-w-md p-6 z-10">
+                w-full max-w-md z-10 flex flex-col max-h-[90vh]">
 
-        <div class="flex items-center justify-between mb-5">
+        {{-- 2. Header: flex-shrink-0 biar tetap diam di atas --}}
+        <div class="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b border-[rgba(203,199,182,0.3)]">
             <h2 class="font-heading font-bold text-lg text-textmain">Edit Workspace</h2>
             <button onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
                     class="w-8 h-8 rounded-lg flex items-center justify-center
@@ -973,34 +1000,42 @@
             </button>
         </div>
 
-        <form id="edit-workspace-form" method="POST" class="space-y-4">
+        {{-- 3. Form: Jadikan area scrollable (flex-1 overflow-y-auto) --}}
+        <form id="edit-workspace-form" method="POST" class="flex-1 overflow-y-auto p-6 pt-4 flex flex-col">
             @csrf
             @method('PATCH')
-            <div>
+            
+            {{-- Input: Nama Workspace (Lebih langsing dengan py-2) --}}
+            <div class="mb-3">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Nama Workspace</label>
                 <input type="text" name="name" id="edit-ws-name" required
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div>
+            
+            {{-- Input: Deskripsi (Lebih langsing dengan py-2) --}}
+            <div class="mb-3">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Deskripsi</label>
                 <input type="text" name="description" id="edit-ws-desc"
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div>
+            
+            {{-- Input: Cover Image (Unsplash) --}}
+            <div class="mb-2 flex-1">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Cover Image</label>
                 <input type="url" name="cover_image" id="edit-ws-cover"
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all mb-2">
-                {{-- Unsplash search inline --}}
+                
+                {{-- Unsplash search inline (Lebih langsing) --}}
                 <div class="flex gap-2">
                     <input type="text" id="unsplash-query-edit" placeholder="Cari foto..."
-                        class="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-white
+                        class="flex-1 border border-border rounded-xl px-4 py-2 text-sm bg-white
                                text-textmain placeholder:text-texthint
                                focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
                     <button type="button" onclick="searchUnsplashEdit()"
-                        class="px-3 py-2 rounded-xl text-sm font-semibold text-white
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white
                                bg-primary hover:bg-primary-dark
                                shadow-[3px_3px_0px_#6a1452]
                                active:translate-y-px active:shadow-[1px_1px_0_#6a1452]
@@ -1017,7 +1052,9 @@
                     <img id="edit-cover-preview-img" src="" alt="" class="w-full h-full object-cover">
                 </div>
             </div>
-            <div class="flex gap-3 pt-1">
+            
+            {{-- 4. Footer Buttons: Dipepetin ke bawah (mt-auto) --}}
+            <div class="flex gap-3 mt-auto pt-3">
                 <button type="button"
                     onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
                     class="flex-1 py-2.5 rounded-xl text-sm font-semibold
@@ -1057,8 +1094,10 @@
             </button>
         </div>
 
-        <form id="invite-form" method="POST" action="#" class="space-y-4">
+        {{-- Action form diarahkan ke route yang benar --}}
+        <form id="invite-form" method="POST" action="{{ route('workspaces.members.store', ['workspace' => $workspace->id]) }}" class="space-y-4">
             @csrf
+            
             <div>
                 <label for="invite-email" class="block text-sm font-semibold text-textsoft mb-1.5">
                     Alamat Email
@@ -1069,7 +1108,22 @@
                            text-textmain placeholder:text-texthint
                            focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div class="flex gap-3 pt-1">
+
+            {{-- Tambahan Input Role / Pangkat --}}
+             <div>
+                <label for="invite-role" class="block text-sm font-semibold text-textsoft mb-1.5">
+                 Role
+                </label>
+                <select id="invite-role" name="role" required
+                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                           text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                    <option value="collaborator">Collaborator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+
+            <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeInviteModal()"
                     class="flex-1 py-2.5 rounded-xl text-sm font-semibold
                            text-textsoft bg-muted hover:bg-border border border-border transition-all">

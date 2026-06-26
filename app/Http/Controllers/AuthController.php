@@ -25,6 +25,7 @@ class AuthController extends Controller
     /** Proses login via email + password */
     public function login(Request $request)
     {
+        // 1. Validasi Input
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
@@ -37,6 +38,7 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
+        // 2. Coba Login Manual
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate(); // cegah session fixation
 
@@ -44,6 +46,19 @@ class AuthController extends Controller
                 ->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
+        // 👇 TAMBAHAN LOGIKA PENGECEKAN AKUN GOOGLE DI SINI 👇
+        // Jika login manual gagal, kita cari email ini di database
+        $user = User::where('email', $request->email)->first();
+
+        // Jika user ketemu DAN dia punya google_id, tampilkan error khusus
+        if ($user && $user->google_id) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Akun ini didaftarkan melalui Google. Silakan klik tombol Login via Google di bawah.']);
+        }
+        // 👆 ---------------------------------------------- 👆
+
+        // 3. Jika bukan akun Google dan memang salah password
         return back()
             ->withInput($request->only('email'))
             ->withErrors(['email' => 'Email atau password salah.']);
@@ -171,5 +186,57 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', 'Login via Google berhasil. Selamat datang, ' . $user->name . '!');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  FORGOT PASSWORD
+    // ═══════════════════════════════════════════════════════
+
+    /** Tampilkan halaman forgot password */
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /** Proses langsung reset password tanpa verifikasi email */
+    public function resetPasswordDirect(Request $request)
+    {
+        // 1. Validasi input: butuh email dan password baru
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
+        ], [
+            'email.required'     => 'Email wajib diisi.',
+            'email.email'        => 'Format email tidak valid.',
+            'password.required'  => 'Password baru wajib diisi.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'password.min'       => 'Password minimal 8 karakter.',
+        ]);
+
+        // 2. Cek apakah email terdaftar di database
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Email tidak ditemukan di sistem kami.']);
+        }
+
+        // 3. JIKA USER TERDAFTAR VIA GOOGLE: Tolak ganti password
+        if ($user->google_id) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Akun ini didaftarkan melalui Google. Silakan login menggunakan tombol Google.']);
+        }
+
+        // 4. Langsung Update Password
+        // (Otomatis di-hash karena kamu sudah pasang 'password' => 'hashed' di file User.php)
+        $user->update([
+            'password' => $request->password
+        ]);
+
+        // 5. Tendang kembali ke halaman Login dengan pesan sukses
+        return redirect()->route('login')
+            ->with('success', 'Password berhasil diubah! Silakan login dengan password baru.');
     }
 }

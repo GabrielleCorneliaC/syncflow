@@ -10,7 +10,9 @@ class Workspace extends Model
 
     public function members()
     {
-        return $this->hasMany(WorkspaceMember::class);
+       return $this->belongsToMany(User::class, 'workspace_members')
+                ->withPivot('role')
+                ->withTimestamps();
     }
 
     public function collaborativeTasks()

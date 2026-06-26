@@ -15,28 +15,9 @@ use App\Mail\WorkspaceInvite as WorkspaceInviteMail;
 class WorkspaceController extends Controller
 {
     // READ — Tampilkan daftar semua workspace di halaman utama
-    public function index() 
-    {
-        // Ambil semua workspace di mana user saat ini menjadi anggota
-        $all = Workspace::whereHas('members', function ($query) {
-            $query->where('user_id', auth()->id());
-        })->with('members.user')->get();
+    
 
-        // Pisahkan menjadi milik saya (admin) dan yang dibagikan ke saya (collaborator)
-        $myWorkspaces = $all->filter(function ($w) {
-            $member = $w->members->firstWhere('user_id', auth()->id());
-            return $member && $member->role === 'admin';
-        })->values();
-
-        $sharedWorkspaces = $all->reject(function ($w) {
-            $member = $w->members->firstWhere('user_id', auth()->id());
-            return $member && $member->role === 'admin';
-        })->values();
-
-        return view('workspaces.index', compact('myWorkspaces', 'sharedWorkspaces'));
-    }
-
-    // CREATE — Simpan workspace baru
+   // CREATE — Simpan workspace baru
     public function store(Request $request)
     {
         $request->validate([
@@ -51,41 +32,61 @@ class WorkspaceController extends Controller
             'cover_image' => $request->cover_image,
         ]);
 
-        // Karena relasinya hasMany, kita pakai create() (bukan attach)
-        $workspace->members()->create([
-            'user_id' => auth()->id(),
-            'role'    => 'admin',
+        // GANTI DARI create() KE attach() 
+        // Ini kuncinya agar tidak menyentuh tabel 'users'
+        $workspace->members()->attach(auth()->id(), [
+            'role'       => 'admin',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // FIX: Diubah ke 'workspace' agar cocok dengan Route web.php baru
         return redirect()->route('workspaces.show', ['workspace' => $workspace->id]);
     }
 
     // READ — Tampilkan workspace beserta anggotanya (FIX: Menggunakan Route Model Binding)
-   public function show(Workspace $workspace)
-    {
-        // 1. Ambil data asli dari temanmu
-        $workspace->load('members.user');
+   // show()
+public function show(Workspace $workspace)
+{
+    $workspace->load('members'); // ✅ hapus .user
 
-        $tasks = CollaborativeTask::where('workspace_id', $workspace->id)->get();
-        $schedules = CollaborativeSchedule::where('workspace_id', $workspace->id)->get();
-        $resources = ResourceLink::where('workspace_id', $workspace->id)->get();
+    $tasks = CollaborativeTask::where('workspace_id', $workspace->id)->get();
+    $schedules = CollaborativeSchedule::where('workspace_id', $workspace->id)->get();
+    $resources = ResourceLink::where('workspace_id', $workspace->id)->get();
 
-        $currentUserId = auth()->id();
-        $member = $workspace->members->firstWhere('user_id', $currentUserId);
+    $currentUserId = auth()->id();
 
-        // 💡 LOGIKA TERBAIK & PALING COCOK: 
-        // User dianggap "Owner/Admin" jika dia pembuat Workspace (owner_id) ATAU terdaftar sebagai 'admin' di tabel member.
-        $isOwner = ($workspace->owner_id == $currentUserId) || ($member && $member->role === 'admin');
+    // ✅ firstWhere pakai 'id' bukan 'user_id', karena $member sudah User
+    $member = $workspace->members->firstWhere('id', $currentUserId);
 
-        // 2. Pengaman Akses: Jika dia bukan pembuat dan namanya tidak terdaftar sama sekali di member, tendang!
-        if (!$isOwner && !$member) {
-            abort(403, 'Akses Ditolak: Kamu bukan anggota workspace ini.');
-        }
+    // ✅ role ada di pivot
+    $isOwner = ($workspace->owner_id == $currentUserId) || ($member && $member->pivot->role === 'admin');
 
-        // Tetap kirim variabel '$isOwner' yang sama persis seperti kode lama temanmu
-        return view('workspaces.show', compact('workspace', 'tasks', 'schedules', 'resources', 'isOwner'));
+    if (!$isOwner && !$member) {
+        abort(403, 'Akses Ditolak: Kamu bukan anggota workspace ini.');
     }
+
+    return view('workspaces.show', compact('workspace', 'tasks', 'schedules', 'resources', 'isOwner'));
+}
+
+// index()
+public function index()
+{
+    $all = Workspace::whereHas('members', function ($query) {
+        $query->where('user_id', auth()->id());
+    })->with('members')->get();
+
+    $myWorkspaces = $all->filter(function ($w) {
+        $member = $w->members->firstWhere('id', auth()->id());
+        return $member && $member->pivot->role === 'admin';
+    })->values();
+
+    $sharedWorkspaces = $all->reject(function ($w) {
+        $member = $w->members->firstWhere('id', auth()->id());
+        return $member && $member->pivot->role === 'admin';
+    })->values();
+
+    return view('workspaces.index', compact('myWorkspaces', 'sharedWorkspaces'));
+}
 
     // UPDATE — Edit nama atau cover (FIX: Menggunakan Route Model Binding)
     public function update(Request $request, Workspace $workspace)
@@ -110,35 +111,57 @@ class WorkspaceController extends Controller
     }
 
     // INVITE anggota baru (FIX: Menggunakan Route Model Binding)
-    public function invite(Request $request, Workspace $workspace)
+   public function invite(Request $request, Workspace $workspace)
     {
-        $request->validate(['email' => 'required|email']);
+        // 1. Validasi ditambah 'role' yang dikirim dari Modal HTML
+        $request->validate([
+            'email' => 'required|email',
+            'role'  => 'required|in:admin,collaborator'
+        ]);
 
         $email = $request->input('email');
+        $role = $request->input('role');
+        
         $user = User::where('email', $email)->first();
 
-        if ($user) {
-            if (! $workspace->members()->where('user_id', $user->id)->exists()) {
-                $workspace->members()->create([
-                    'user_id' => $user->id,
-                    'role'    => 'collaborator',
-                ]);
-            }
+        // Jika user belum pernah register ke aplikasimu
+        if (!$user) {
+            return back()->with('error', 'User dengan email tersebut tidak terdaftar di sistem.');
         }
 
+        // 2. Cek apakah user tersebut sudah ada di tabel pivot workspace_members
+        $member = $workspace->members()->where('user_id', $user->id)->first();
+
+        if ($member) {
+            // Jika SUDAH menjadi anggota, kita cukup update 'role'-nya saja
+            $workspace->members()->updateExistingPivot($user->id, [
+                'role'       => $role,
+                'updated_at' => now(),
+            ]);
+        } else {
+            // Jika BELUM menjadi anggota, gunakan attach() untuk memasukkan data ke tabel pivot
+            $workspace->members()->attach($user->id, [
+                'role'       => $role,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // 3. Proses Pengiriman Email (Sesuai kodingan aslimu)
         try {
             // MATIKAN SEMENTARA BARIS INI SAMPAI TEMANMU MEMBUAT FILE-NYA
-            // Mail::to($request->email)->send(new \App\Mail\WorkspaceInviteMail($workspace, $request->email));
+            Mail::to($email)->send(new \App\Mail\WorkspaceInvite($workspace, $email));
             
             // Tambahkan log simulasi agar kita tahu sistemnya sebenarnya berjalan
-            \Log::info('Simulasi undangan berhasil dikirim ke: ' . $request->email);
+            \Log::info("Simulasi undangan ($role) berhasil dikirim ke: " . $email);
 
         } catch (\Exception $e) {
             \Log::error('Failed to send workspace invite: '.$e->getMessage());
             return back()->with('error', 'Gagal mengirim undangan. Silakan coba lagi.');
         }
 
-        return back();
+        // Kembalikan ke halaman sebelumnya dengan pesan sukses
+        return back()->with('success', "Berhasil! Pengguna diundang sebagai $role.");
     }
 
     // Proxy API Unsplash

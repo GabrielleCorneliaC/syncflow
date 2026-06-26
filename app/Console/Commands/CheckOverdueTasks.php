@@ -8,22 +8,20 @@ use Carbon\Carbon;
 
 class CheckOverdueTasks extends Command
 {
-    // Nama perintah yang nanti dipanggil oleh sistem
+    // Nama perintah untuk dijalankan di terminal
     protected $signature = 'tasks:check-overdue';
 
     // Deskripsi perintah
-    protected $description = 'Mengecek dan mengubah status tugas yang melewati tenggat waktu menjadi overdue';
+    protected $description = 'Mengecek dan mengubah status task yang lewat deadline menjadi overdue';
 
     public function handle()
     {
-        // Cari tugas yang due_date-nya sudah lewat dari waktu sekarang,
-        // dan statusnya BUKAN completed atau overdue.
-        $tasksToUpdate = CollaborativeTask::whereNotNull('due_date')
-            ->where('due_date', '<', Carbon::now())
-            ->whereNotIn('status', ['completed', 'overdue'])
+        // Cari task yang belum selesai, punya deadline, dan waktunya sudah lewat dari detik ini
+        $overdueTasks = CollaborativeTask::whereNotIn('status', ['done', 'overdue'])
+            ->whereNotNull('deadline')
+            ->where('deadline', '<', Carbon::now())
             ->update(['status' => 'overdue']);
 
-        // Menampilkan pesan sukses di terminal log
-        $this->info("Berhasil memperbarui {$tasksToUpdate} tugas menjadi overdue.");
+        $this->info("Berhasil mengupdate {$overdueTasks} task menjadi overdue.");
     }
 }
