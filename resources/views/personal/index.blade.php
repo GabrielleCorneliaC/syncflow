@@ -3,24 +3,8 @@
 @section('page-title', 'Personal List')
 
 @section('content')
-{{--
-    ════════════════════════════════════════════════════════════════
-    SyncFlow Halaman List Personal
-    Ref Figma:
-      Desktop  → node 1:55   — sidebar + 2 section (Task + Schedule)
-      Mobile   → node 29:2   — bottom nav + FAB magenta + scroll horizontal tabel
 
-    Sections:
-      [A] List Task (Daftar Tugas)
-          Table: checkbox · Task Name & Progress bar · Deadline · Status badge · ⋮
-      [B] List Schedule (Daftar Jadwal Acara)
-          Table: dot · Schedule Name · Date · Time · Location · ⋮
-    ════════════════════════════════════════════════════════════════
---}}
 
-{{-- ════════════════════════════════════════════════════════════
-     FLASH MESSAGES
-════════════════════════════════════════════════════════════ --}}
 @if(session('success'))
 <div x-data="{ show: true }" x-show="show" x-init="setTimeout(()=>show=false,3500)"
      class="mb-6 flex items-center gap-2 bg-green-50 border border-green-200
@@ -32,12 +16,11 @@
 </div>
 @endif
 
-{{-- ── Page Header ────────────────────────────────────────────── --}}
+{{-- ── Page Header  --}}
 <div class="flex items-end justify-between
             border-b border-[rgba(203,199,182,0.3)] pb-[13px]
             mb-6">
 
-    {{-- Judul: Montserrat ExtraBold 48px #1d1c17 --}}
     <h1 class="font-montserrat font-extrabold text-[#1d1c17] tracking-[-0.02em]
                text-3xl sm:text-4xl lg:text-5xl leading-tight">
         Your Workflow
@@ -53,7 +36,6 @@
             Connected to Google Calendar
         </div>
     @else
-        {{-- Tampilan jika belum tersambung (Tetap pakai <button>) --}}
         <button onclick="window.location.href='{{ route('google.calendar.redirect') }}'" 
                 class="flex items-center gap-1
                        bg-[#ece8df] border border-[rgba(203,199,182,0.5)]
@@ -72,15 +54,13 @@
     @endif
 </div>
 
-{{-- Wrapper dengan padding bawah extra untuk bottom nav mobile --}}
 <div class="flex flex-col gap-16 pb-28 md:pb-0">
 
-{{-- ════════════════════════════════════════════════════════════
+{{-- 
      SECTION A: LIST TASK
-════════════════════════════════════════════════════════════ --}}
+ --}}
 <section class="flex flex-col gap-6">
 
-    {{-- Section heading --}}
     <div class="flex items-center gap-3">
         {{-- Ikon checklist --}}
         <svg class="w-5 h-5 shrink-0 text-[#b30084]" viewBox="0 0 20 20" fill="none">
@@ -230,9 +210,9 @@
     </div>
 </section>
 
-{{-- ════════════════════════════════════════════════════════════
+{{-- 
      SECTION B: LIST SCHEDULE
-════════════════════════════════════════════════════════════ --}}
+ --}}
 <section class="flex flex-col gap-6">
 
     {{-- Section heading --}}
@@ -250,10 +230,8 @@
     </div>
 
     {{-- Tabel Schedule --}}
-    {{-- 1. Pindahkan overflow-x-auto ke kotak utama ini, hapus div pembungkus luar yang lama --}}
     <div class="bg-white border border-[rgba(60,0,42,0.1)] rounded-xl shadow-[0px_4px_12px_0px_rgba(106,20,82,0.05)] overflow-x-auto min-h-[400px]">
         
-        {{-- 2. KUNCI UTAMA: Bungkus isi tabel dengan min-w-[800px] agar background dan garis ikut melar ditarik ke kanan --}}
         <div class="min-w-[800px]">
             
             {{-- Table Header --}}
@@ -365,14 +343,9 @@
     </div>
 </section>
 
-</div>{{-- /flex flex-col gap-16 --}}
+</div>
 
 
-{{-- ════════════════════════════════════════════════════════════
-     FAB (Floating Action Button) — mobile only
-     Figma: bg #b30084 · shadow-[4px_4px_0_#6a1452] · rounded-xl · 56px
-     Desktop: tombol "+ New" di sidebar (sudah ada di layouts/app.blade.php)
-════════════════════════════════════════════════════════════ --}}
 {{-- FAB (Floating Action Button) — Mobile Only --}}
 <div class="md:hidden fixed bottom-6 right-6 z-50" x-data="{ openMenu: false }">
     
@@ -405,10 +378,7 @@
 </div>
 
 
-{{-- ════════════════════════════════════════════════════════════
-     MODAL: Tambah Tugas Baru
-     Trigger: FAB mobile atau tombol + New di sidebar
-════════════════════════════════════════════════════════════ --}}
+
 {{-- Modal Tambah Tugas --}}
 <x-personal-task-modal 
     id="modal-tambah-tugas" 
@@ -425,23 +395,18 @@
     method="POST" 
 />
 
-{{-- ── Hubungkan tombol + New di sidebar ke modal ── --}}
 @push('scripts')
 <script>
-    // Sidebar "+ New" button dispatch ke event Alpine
     document.addEventListener('DOMContentLoaded', function () {
-        // Fungsi untuk buka modal
         const openModal = () => {
             window.dispatchEvent(new CustomEvent('open-add-modal'));
         };
 
-        // 1. Trigger dari Sidebar "+ New"
         const sidebarBtn = document.querySelector('[data-new-btn]');
         if (sidebarBtn) {
             sidebarBtn.addEventListener('click', openModal);
         }
 
-        // 2. Trigger dari FAB Mobile
         const fabBtn = document.querySelector('[data-new-btn-mobile]');
         if (fabBtn) {
             fabBtn.addEventListener('click', openModal);
@@ -450,13 +415,11 @@
     function openModal(id) {
         document.getElementById(id).classList.remove('hidden');
     }
-    // Tambahkan juga fungsi untuk menutupnya jika belum ada
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
     }
 
     function updatePersonalTaskStatus(taskId, isChecked) {
-        // Tampilkan indikator loading
         const loadingSpan = document.getElementById('loading-personal-' + taskId);
         if (loadingSpan) loadingSpan.classList.remove('hidden');
 
@@ -471,7 +434,6 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Refresh halaman agar badge dan progress bar update otomatis
                 window.location.reload(); 
             }
         })

@@ -3,33 +3,9 @@
 @section('page-title', 'Profile')
 
 @section('content')
-{{--
-    ════════════════════════════════════════════════════════════════
-    SyncFlow Halaman Profil (Merged Layout)
-    Ref Figma:
-      Desktop  → node 1:1144  — 12-col bento, col 1-8 kiri + col 9-12 kanan
-      Mobile   → node 58:1033 — single col, bottom nav bar
 
-    Komponen utama:
-      [Kiri / Full]  Card "IDENTITY MAP"
-        – avatar 136px, border-4 #fdf9f0, shadow [4px_4px_0_#894e4b]
-        – tombol edit avatar bulat magenta kanan bawah
-        – nama (Poppins SemiBold, #894e4b, 48px desktop → 32px mobile)
-        – email (Inter Regular, #7b4240, 20px)
-        – form: First Name + Last Name (2 kol) · Email (full width)
-        – tombol "Save Changes" bg #656026 shadow [4px_4px_0_#894e4b]
-      [Kanan]  Card "Account Control"  +  Card "Security Settings"
-    ════════════════════════════════════════════════════════════════
---}}
-
-{{-- ════════════════════════════════════════════════════════════
-     BENTO GRID  12 kolom desktop, 1 kolom mobile
-════════════════════════════════════════════════════════════ --}}
 <div class="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6 pb-24 md:pb-0">
 
-    {{-- ══════════════════════════════════════════════════════
-         KOLOM KIRI — "IDENTITY MAP" card  (col 1-8 desktop)
-    ══════════════════════════════════════════════════════ --}}
     <div class="md:col-span-8 pt-6 flex flex-col">
 
         {{-- Folder tab "IDENTITY MAP" --}}
@@ -45,7 +21,7 @@
             </div>
         </div>
 
-        {{-- ── Main identity card ─────────────────────────── --}}
+        {{-- ── Main identity card  --}}
         <div class="flex-1
                     bg-[#ffdad7] border border-[#894e4b]
                     rounded-bl-xl rounded-br-xl rounded-tr-xl
@@ -58,7 +34,7 @@
             <div class="pointer-events-none absolute -top-20 -right-20 w-64 h-64
                         bg-white/20 rounded-full blur-[32px]"></div>
 
-            {{-- ── Avatar + nama + email ─────────────────── --}}
+            {{-- ── Avatar + nama + email  --}}
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-12 relative z-10">
 
                 {{-- Avatar --}}
@@ -74,7 +50,7 @@
                              class="w-full h-full rounded-full object-cover">
                     </div>
 
-                    {{-- Tombol edit avatar (bulat magenta) --}}
+                    {{-- Tombol edit avatar --}}
                     <label for="avatarInput"
                            class="absolute -bottom-1 -right-1
                                   w-[33px] h-[33px] rounded-full
@@ -91,7 +67,7 @@
                         </svg>
                     </label>
 
-                    {{-- Input file: terhubung ke infoForm via attribute `form` --}}
+                    {{-- Input file --}}
                     <input id="avatarInput"
                            type="file"
                            name="avatar"
@@ -112,7 +88,6 @@
                         {{ Auth::user()->email }}
                     </p>
 
-                    {{-- Preview banner: muncul setelah pilih foto baru --}}
                     <div id="avatarChangeBanner"
                          class="hidden items-center gap-2 bg-white/70 border border-[#894e4b]
                                 rounded-lg px-3 py-2 text-xs text-[#894e4b] font-inter font-medium mt-1">
@@ -125,10 +100,10 @@
                 </div>
             </div>
 
-            {{-- ── Divider ─────────────────────────────────── --}}
+            {{-- ── Divider  --}}
             <div class="border-t border-[rgba(137,78,75,0.2)] relative z-10"></div>
 
-            {{-- ── Form: Update Info ───────────────────────── --}}
+            {{-- ── Form: Update Info  --}}
             @if(session('success_info'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(()=>show=false,4000)"
                  class="flex items-center gap-2 bg-green-50 border border-green-200
@@ -220,19 +195,9 @@
     {{-- /kolom kiri --}}
 
 
-    {{-- ══════════════════════════════════════════════════════
-         KOLOM KANAN — Account Control + Security Settings
-         Desktop: col 9-12  |  Mobile: full width (urutan setelah identity card)
-    ══════════════════════════════════════════════════════ --}}
     <div class="md:col-span-4 flex flex-col gap-5 lg:gap-6 pt-6 md:pt-6">
 
         {{-- ── Card: Account Control ─────────────────────── --}}
-        {{--
-            Figma: bg #f8f3eb · border #cbc7b6 · radius 12px
-            shadow-[0px_1px_1px_rgba(0,0,0,0.05)]
-            p-25 · gap-16
-            tombol Log Out: border-2 #ba1a1a · radius 8px · text #ba1a1a
-        --}}
         <div class="bg-[#f8f3eb] border border-[#cbc7b6] rounded-xl
                     shadow-[0px_1px_1px_rgba(0,0,0,0.05)]
                     p-[25px] flex flex-col gap-4">
@@ -267,15 +232,6 @@
         </div>
 
         {{-- ── Card: Security Settings ───────────────────── --}}
-        {{--
-            Figma: bg white · border #cbc7b6 · radius 12px
-            shadow-[0px_1px_1px_rgba(0,0,0,0.05)]
-            header: gembok icon + "Security Settings" Poppins Medium
-            border-b #cbc7b6/40 · pb-17
-            inputs: bg #fdf9f0 · border #cbc7b6 · radius 6px · py-15 px-17
-            label: Inter SemiBold 12px #7a7769 uppercase tracking-[0.6px]
-            tombol: border-2 #894e4b · text #894e4b · px-26 py-10 · radius 8px
-        --}}
         <div class="bg-white border border-[#cbc7b6] rounded-xl
                     shadow-[0px_1px_1px_rgba(0,0,0,0.05)]
                     pt-[25px] pb-10 px-[25px]
@@ -371,11 +327,7 @@
                                   transition">
                 </div>
 
-                {{-- Update Password button --}}
-                {{--
-                    Figma: border-2 #894e4b · text #894e4b · radius 8px
-                    px-26 py-10 · Poppins Medium 16px
-                --}}
+               
                 <div class="flex justify-end pt-2">
                     <button type="submit"
                             class="border-2 border-[#894e4b] rounded-lg
@@ -390,7 +342,6 @@
         </div>
         {{-- /security card --}}
 
-        {{-- ── Card: Upload Avatar (tersembunyi, triggered dari tombol edit) ── --}}
         <div id="avatarUploadPanel"
              class="hidden bg-white border border-[#cbc7b6] rounded-xl
                     shadow-[0px_1px_1px_rgba(0,0,0,0.05)]
@@ -429,24 +380,15 @@
 {{-- /bento grid --}}
 
 
-{{-- ════════════════════════════════════════════════════════════
-     BOTTOM NAVIGATION BAR — mobile only
-     Figma: bg #f8f3eb · border-t #cbc7b6 · shadow-[0px_-4px_6px_rgba(0,0,0,0.05)]
-     4 item: Home · Personal · Collab · Profile (aktif = text #b30084)
-════════════════════════════════════════════════════════════ --}}
-
-
 @endsection
 
 
 @push('scripts')
 <script>
-    // 1. Preview gambar saat user pilih file
     function previewAvatar(input) {
         const file = input.files[0];
         if (!file) return;
 
-        // Tampilkan panel konfirmasi simpan
         const panel = document.getElementById('avatarUploadPanel');
         panel.classList.remove('hidden');
         panel.classList.add('flex');
@@ -457,15 +399,13 @@
         };
         reader.readAsDataURL(file);
 
-        // Tampilkan nama file
         const nameEl = document.getElementById('avatarSelectedName');
         nameEl.textContent = "File: " + file.name;
         nameEl.classList.remove('hidden');
         document.getElementById('avatarSaveBtn').classList.remove('hidden');
     }
 
-    // 2. Fungsi ini dijalankan saat tombol "Simpan Foto" diklik
-    // Pastikan tombol di HTML punya onclick="submitAvatarForm()"
+
     function submitAvatarForm() {
         document.getElementById('avatarForm').submit();
     }

@@ -12,9 +12,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
-    // ═══════════════════════════════════════════════════════
-    //  LOGIN
-    // ═══════════════════════════════════════════════════════
+
 
     /** Tampilkan halaman login */
     public function showLogin()
@@ -25,7 +23,6 @@ class AuthController extends Controller
     /** Proses login via email + password */
     public function login(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
@@ -38,35 +35,26 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
-        // 2. Coba Login Manual
         if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate(); // cegah session fixation
+            $request->session()->regenerate(); 
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
-        // 👇 TAMBAHAN LOGIKA PENGECEKAN AKUN GOOGLE DI SINI 👇
-        // Jika login manual gagal, kita cari email ini di database
         $user = User::where('email', $request->email)->first();
 
-        // Jika user ketemu DAN dia punya google_id, tampilkan error khusus
         if ($user && $user->google_id) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Akun ini didaftarkan melalui Google. Silakan klik tombol Login via Google di bawah.']);
         }
-        // 👆 ---------------------------------------------- 👆
 
-        // 3. Jika bukan akun Google dan memang salah password
         return back()
             ->withInput($request->only('email'))
             ->withErrors(['email' => 'Email atau password salah.']);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  REGISTER
-    // ═══════════════════════════════════════════════════════
 
     /** Tampilkan halaman register */
     public function showRegister()
@@ -107,9 +95,6 @@ class AuthController extends Controller
             ->with('success', 'Akun berhasil dibuat. Selamat datang, ' . $user->name . '!');
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  LOGOUT
-    // ═══════════════════════════════════════════════════════
 
     public function logout(Request $request)
     {
@@ -121,9 +106,6 @@ class AuthController extends Controller
             ->with('success', 'Kamu berhasil logout.');
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  GOOGLE OAUTH — via Laravel Socialite
-    // ═══════════════════════════════════════════════════════
 
     /**
      * Redirect ke halaman consent Google.
@@ -137,12 +119,6 @@ class AuthController extends Controller
     /**
      * Callback dari Google setelah user mengizinkan.
      * Route: GET /auth/google/callback
-     *
-     * Alur:
-     *  1. Ambil data dari Google (nama, email, google_id)
-     *  2. Kalau email sudah ada di DB → update google_id kalau belum ada, lalu login
-     *  3. Kalau belum ada → buat akun baru otomatis (tanpa password manual)
-     *  4. Login & redirect ke dashboard
      */
     public function handleGoogleCallback()
     {
@@ -153,44 +129,37 @@ class AuthController extends Controller
                 ->withErrors(['email' => 'Login via Google gagal. Coba lagi.']);
         }
 
-        // Pisahkan given_name dan family_name dari Google
-        $googleName = $googleUser->getName();         // "Alex Mercer"
-        $googleEmail = $googleUser->getEmail();        // "alex.mercer@gmail.com"
+        $googleName = $googleUser->getName();         
+        $googleEmail = $googleUser->getEmail();       
         $googleId    = $googleUser->getId();
 
-        // Cari user berdasarkan google_id atau email
         $user = User::where('google_id', $googleId)
                     ->orWhere('email', $googleEmail)
                     ->first();
 
         if ($user) {
-            // User sudah ada → update google_id kalau belum tersimpan
             if (! $user->google_id) {
                 $user->update(['google_id' => $googleId]);
             }
         } else {
-            // User baru → buat akun otomatis
-            // Password di-generate random (tidak perlu diingat user karena login via Google)
             $user = User::create([
                 'name'      => $googleName,
                 'email'     => $googleEmail,
                 'google_id' => $googleId,
-                'password'  => Hash::make(Str::random(32)), // password acak, tidak dipakai
-                'avatar'    => $googleUser->getAvatar(),    // foto profil dari Google
+                'password'  => Hash::make(Str::random(32)), 
+                'avatar'    => $googleUser->getAvatar(),    
                 'role'      => 'member',
             ]);
         }
 
-        Auth::login($user, true); // remember = true
+        Auth::login($user, true); 
         request()->session()->regenerate();
 
         return redirect()->route('dashboard')
             ->with('success', 'Login via Google berhasil. Selamat datang, ' . $user->name . '!');
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  FORGOT PASSWORD
-    // ═══════════════════════════════════════════════════════
+
 
     /** Tampilkan halaman forgot password */
     public function showForgotPassword()
@@ -201,7 +170,6 @@ class AuthController extends Controller
     /** Proses langsung reset password tanpa verifikasi email */
     public function resetPasswordDirect(Request $request)
     {
-        // 1. Validasi input: butuh email dan password baru
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
@@ -213,7 +181,6 @@ class AuthController extends Controller
             'password.min'       => 'Password minimal 8 karakter.',
         ]);
 
-        // 2. Cek apakah email terdaftar di database
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
@@ -222,20 +189,16 @@ class AuthController extends Controller
                 ->withErrors(['email' => 'Email tidak ditemukan di sistem kami.']);
         }
 
-        // 3. JIKA USER TERDAFTAR VIA GOOGLE: Tolak ganti password
         if ($user->google_id) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Akun ini didaftarkan melalui Google. Silakan login menggunakan tombol Google.']);
         }
 
-        // 4. Langsung Update Password
-        // (Otomatis di-hash karena kamu sudah pasang 'password' => 'hashed' di file User.php)
         $user->update([
             'password' => $request->password
         ]);
 
-        // 5. Tendang kembali ke halaman Login dengan pesan sukses
         return redirect()->route('login')
             ->with('success', 'Password berhasil diubah! Silakan login dengan password baru.');
     }

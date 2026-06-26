@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat User Dummy (Alex Mercer)
         $user = User::create([
             'id' => 1,
             'name' => 'Alex Mercer',
@@ -19,18 +18,14 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345678'),
         ]);
 
-        // 2. Buat Workspace Dummy ("Kepanitiaan BEM" sesuai mockup)
         $workspace = Workspace::create([
             'name' => 'Kepanitiaan BEM',
-            // Pakai gambar acak dari Unsplash untuk dummy
             'cover_image' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500&q=80', 
         ]);
 
-        // 3. Masukkan Alex sebagai Admin di workspace tersebut
         $workspace->members()->attach($user->id, ['role' => 'admin']);
         
 
-        // Admin default — GANTI PASSWORD SETELAH LOGIN PERTAMA!
         User::firstOrCreate(
             ['email' => 'admin@syncflow.test'],
             [
@@ -40,7 +35,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Contoh member (untuk testing)
         User::firstOrCreate(
             ['email' => 'elizabeth@syncflow.test'],
             [

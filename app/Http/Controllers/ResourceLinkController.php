@@ -7,12 +7,11 @@ use Illuminate\Http\Request;
 
 class ResourceLinkController extends Controller
 {
-    // Menyimpan link referensi baru
     public function store(Request $request, $workspace_id)
     {
         $request->validate([
             'title'       => 'required|string|max:255',
-            'url'         => 'required|url', // Memastikan input benar-benar format link (http/https)
+            'url'         => 'required|url', 
             'description' => 'nullable|string',
         ]);
 
@@ -45,7 +44,6 @@ class ResourceLinkController extends Controller
         return back()->with('success', 'Link referensi berhasil diperbarui!');
     }
 
-    // Menghapus link referensi
     public function destroy($workspace_id, $resource)
     {
         $resource = ResourceLink::where('workspace_id', $workspace_id)->findOrFail($resource);

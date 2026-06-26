@@ -13,11 +13,10 @@ class TaskCommentController extends Controller
     {
         $data = $request->validate([
             'collaborative_task_id' => 'required|exists:collaborative_tasks,id',
-            'comment' => 'nullable|string', // Sekarang boleh kosong
-            'attachment' => 'nullable|file|max:10240' // Maksimal 10MB
+            'comment' => 'nullable|string', 
+            'attachment' => 'nullable|file|max:10240' 
         ]);
 
-        // Validasi tambahan: Jangan sampai dua-duanya kosong
         if (empty($data['comment']) && !$request->hasFile('attachment')) {
             return response()->json([
                 'success' => false, 
@@ -34,7 +33,6 @@ class TaskCommentController extends Controller
         $comment = TaskComment::create([
             'collaborative_task_id' => $data['collaborative_task_id'],
             'user_id' => auth()->id(),
-            // Kasih default string kosong '' kalau teksnya null biar database nggak error
             'comment' => $data['comment'] ?? '', 
             'attachment_path' => $attachmentPath
         ]);

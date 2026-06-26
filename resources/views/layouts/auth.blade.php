@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}">
     <title>@yield('title', 'SyncFlow')</title>
 
-    {{-- Fonts: Montserrat (heading) · Poppins (button/toggle) · Inter (body) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -42,7 +41,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; background: #ffffff; }
 
-        /* Blob animasi */
         .blob {
             position: absolute;
             width: 192px; height: 192px;
@@ -61,39 +59,32 @@
             70%     { transform: translate(-7px,7px) scale(0.97); }
         }
 
-        /* Card */
         .glass-card {
             background: rgba(255,255,255,0.70);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
 
-        /* Toggle pill aktif */
         .tab-active  { background: #ffffff; color: #1d1c17; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
         .tab-inactive{ background: transparent; color: #49473a; }
 
-        /* Focus input */
         .sf-input:focus { border-color: #b30084; background: #ffffff; outline: none; }
         .sf-input.error { border-color: #f87171; background: #fef2f2; }
 
-        /* Scrollbar tipis di mobile */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbc7b6; border-radius: 99px; }
 
-        /* 1. Paksa mata bawaan browser (Edge) mati total ke akar-akarnya */
         input::-ms-reveal,
         input::-ms-clear {
             display: none !important;
         }
 
-        /* 2. Sembunyikan mata buatan kita kalau kotak masih kosong */
         .sf-input:placeholder-shown + button {
             opacity: 0 !important;
             pointer-events: none !important;
             transition: opacity 0.2s ease;
         }
 
-        /* 3. Munculkan mata, pastikan BISA DIKLIK, dan taruh di lapisan paling atas saat diketik */
         .sf-input:not(:placeholder-shown) + button {
             opacity: 1 !important;
             pointer-events: auto !important;

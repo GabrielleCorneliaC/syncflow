@@ -3,15 +3,6 @@
 
 @section('content')
 
-{{--
-    ════════════════════════════════════════════════════════
-    SyncFlow Sign Up Page
-    Ref Figma: node 72:14 (desktop) · node 72:92 (mobile)
-    Fields  : First Name · Last Name · Email · Password
-    Button  : "Join The Magic →"
-    ════════════════════════════════════════════════════════
---}}
-
 <div class="relative w-full max-w-[440px] mx-auto">
 
     <div class="blob blob-yellow"></div>
@@ -66,7 +57,7 @@
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-4 pt-2" novalidate>
             @csrf
 
-            {{-- First Name + Last Name (2 kolom di tablet/desktop, 1 kolom di mobile) --}}
+            {{-- First Name + Last Name --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {{-- First Name --}}

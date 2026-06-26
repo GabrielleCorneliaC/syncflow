@@ -14,14 +14,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // ─────────────────────────────────────────────────────────────
-        // 1. STATISTIK PROGRESS (Poin 1, 2, 3)
-        // ─────────────────────────────────────────────────────────────
-        // Ambil total task & task yang done
         $tasksDone = PersonalTask::where('user_id', $user->id)->where('status', 'done')->count();
         $tasksTotal = PersonalTask::where('user_id', $user->id)->count();
         
-        // Progress Bar = Rata-rata dari kolom 'progress' di semua personal task
         $progressAvg = PersonalTask::where('user_id', $user->id)->avg('progress');
         $progressPct = $progressAvg ? round($progressAvg) : 0;
 
@@ -31,11 +26,8 @@ class DashboardController extends Controller
             'progress_pct'   => $progressPct,
         ];
 
-        // ─────────────────────────────────────────────────────────────
-        // 2. NEXT 7 DAYS (Poin 4: Hilangkan yang sudah Done)
-        // ─────────────────────────────────────────────────────────────
         $upcomingItems = PersonalTask::where('user_id', $user->id)
-            ->where('status', '!=', 'done') // Jangan tampilkan yang done
+            ->where('status', '!=', 'done') 
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [\Carbon\Carbon::now(), \Carbon\Carbon::now()->addDays(7)])
             ->orderBy('due_date', 'asc')
@@ -48,25 +40,18 @@ class DashboardController extends Controller
                 ];
             });
 
-        // ─────────────────────────────────────────────────────────────
-        // 3. TUGAS PERSONAL BELUM SELESAI (Poin 6: Hilangkan yang Done)
-        // ─────────────────────────────────────────────────────────────
         $pendingPersonalTasks = PersonalTask::where('user_id', $user->id)
-            ->where('status', '!=', 'done') // Jangan tampilkan yang done
+            ->where('status', '!=', 'done') 
             ->orderBy('due_date', 'asc')
-            ->take(4) // Tambah jadi 4 biar pas sejajar kalender
+            ->take(4) 
             ->get();
 
-        // ─────────────────────────────────────────────────────────────
-        // 4. TUGAS KOLABORASI BELUM SELESAI (Hanya untuk user yang login)
-        // ─────────────────────────────────────────────────────────────
-        // Gunakan relasi collaborativeTasks() milik user agar HANYA tugas 
-        // dari workspace yang melibatkan user ini saja yang muncul.
+
         $pendingCollabTasks = $user->collaborativeTasks()
             ->with(['assignees', 'workspace'])
-            ->where('collaborative_tasks.status', '!=', 'done') // Jangan tampilkan yang done
-            ->orderBy('collaborative_tasks.created_at', 'desc') // Urutkan dari yang terbaru
-            ->take(4) // Tambah jadi 4 biar pas sejajar kalender
+            ->where('collaborative_tasks.status', '!=', 'done') 
+            ->orderBy('collaborative_tasks.created_at', 'desc') 
+            ->take(4) 
             ->get();
 
         return view('dashboard.index', compact(

@@ -34,7 +34,6 @@ class PersonalScheduleController extends Controller
     {
         $this->authorizeSchedule($schedule);
 
-        // Hapus dari Google Calendar dulu JIKA punya Event ID
         if ($schedule->google_calendar_event_id) {
             try {
                 $googleCalendar->deleteSchedule($schedule);
@@ -91,7 +90,6 @@ class PersonalScheduleController extends Controller
         try {
             $event = $googleCalendar->syncSchedule($schedule);
 
-            // SIMPAN ID EVENT AGAR BISA DI-UPDATE/DELETE!
             if ($event && isset($event['id'])) {
                 $schedule->google_calendar_event_id = $event['id'];
                 $schedule->google_calendar_html_link = $event['htmlLink'] ?? null;

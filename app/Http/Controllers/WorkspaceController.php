@@ -14,10 +14,6 @@ use App\Mail\WorkspaceInvite as WorkspaceInviteMail;
 
 class WorkspaceController extends Controller
 {
-    // READ — Tampilkan daftar semua workspace di halaman utama
-    
-
-   // CREATE — Simpan workspace baru
     public function store(Request $request)
     {
         $request->validate([
@@ -32,8 +28,6 @@ class WorkspaceController extends Controller
             'cover_image' => $request->cover_image,
         ]);
 
-        // GANTI DARI create() KE attach() 
-        // Ini kuncinya agar tidak menyentuh tabel 'users'
         $workspace->members()->attach(auth()->id(), [
             'role'       => 'admin',
             'created_at' => now(),
@@ -43,8 +37,7 @@ class WorkspaceController extends Controller
         return redirect()->route('workspaces.show', ['workspace' => $workspace->id]);
     }
 
-    // READ — Tampilkan workspace beserta anggotanya (FIX: Menggunakan Route Model Binding)
-   // show()
+
 public function show(Workspace $workspace)
 {
     $workspace->load('members'); // ✅ hapus .user
@@ -55,10 +48,8 @@ public function show(Workspace $workspace)
 
     $currentUserId = auth()->id();
 
-    // ✅ firstWhere pakai 'id' bukan 'user_id', karena $member sudah User
     $member = $workspace->members->firstWhere('id', $currentUserId);
 
-    // ✅ role ada di pivot
     $isOwner = ($workspace->owner_id == $currentUserId) || ($member && $member->pivot->role === 'admin');
 
     if (!$isOwner && !$member) {
@@ -68,7 +59,6 @@ public function show(Workspace $workspace)
     return view('workspaces.show', compact('workspace', 'tasks', 'schedules', 'resources', 'isOwner'));
 }
 
-// index()
 public function index()
 {
     $all = Workspace::whereHas('members', function ($query) {
@@ -88,7 +78,6 @@ public function index()
     return view('workspaces.index', compact('myWorkspaces', 'sharedWorkspaces'));
 }
 
-    // UPDATE — Edit nama atau cover (FIX: Menggunakan Route Model Binding)
     public function update(Request $request, Workspace $workspace)
     {
         $request->validate([
@@ -102,7 +91,6 @@ public function index()
         return back()->with('success', 'Workspace diperbarui.');
     }
 
-    // DELETE — Hanya admin (FIX: Menggunakan Route Model Binding)
     public function destroy(Workspace $workspace)
     {
         $workspace->delete();
@@ -110,10 +98,8 @@ public function index()
         return redirect()->route('workspaces.index');
     }
 
-    // INVITE anggota baru (FIX: Menggunakan Route Model Binding)
    public function invite(Request $request, Workspace $workspace)
     {
-        // 1. Validasi ditambah 'role' yang dikirim dari Modal HTML
         $request->validate([
             'email' => 'required|email',
             'role'  => 'required|in:admin,collaborator'
@@ -124,22 +110,18 @@ public function index()
         
         $user = User::where('email', $email)->first();
 
-        // Jika user belum pernah register ke aplikasimu
         if (!$user) {
             return back()->with('error', 'User dengan email tersebut tidak terdaftar di sistem.');
         }
 
-        // 2. Cek apakah user tersebut sudah ada di tabel pivot workspace_members
         $member = $workspace->members()->where('user_id', $user->id)->first();
 
         if ($member) {
-            // Jika SUDAH menjadi anggota, kita cukup update 'role'-nya saja
             $workspace->members()->updateExistingPivot($user->id, [
                 'role'       => $role,
                 'updated_at' => now(),
             ]);
         } else {
-            // Jika BELUM menjadi anggota, gunakan attach() untuk memasukkan data ke tabel pivot
             $workspace->members()->attach($user->id, [
                 'role'       => $role,
                 'created_at' => now(),
@@ -147,12 +129,9 @@ public function index()
             ]);
         }
 
-        // 3. Proses Pengiriman Email (Sesuai kodingan aslimu)
         try {
-            // MATIKAN SEMENTARA BARIS INI SAMPAI TEMANMU MEMBUAT FILE-NYA
             Mail::to($email)->send(new \App\Mail\WorkspaceInvite($workspace, $email));
             
-            // Tambahkan log simulasi agar kita tahu sistemnya sebenarnya berjalan
             \Log::info("Simulasi undangan ($role) berhasil dikirim ke: " . $email);
 
         } catch (\Exception $e) {
@@ -160,11 +139,9 @@ public function index()
             return back()->with('error', 'Gagal mengirim undangan. Silakan coba lagi.');
         }
 
-        // Kembalikan ke halaman sebelumnya dengan pesan sukses
         return back()->with('success', "Berhasil! Pengguna diundang sebagai $role.");
     }
 
-    // Proxy API Unsplash
     public function unsplashSearch(Request $request)
     {
         $query = $request->input('query', 'workspace');

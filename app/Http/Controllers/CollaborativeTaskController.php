@@ -15,15 +15,11 @@ class CollaborativeTaskController extends Controller
 {
     public function show(Workspace $workspace, CollaborativeTask $task)
     {
-       // Validasi: pastikan task ini benar-benar milik workspace yang sedang dibuka
-    abort_unless($task->workspace_id === $workspace->id, 404);
+        abort_unless($task->workspace_id === $workspace->id, 404);
 
-    // Eager load data relasi (misal: memanggil relasi komentar dan user yang komen)
-    // Supaya di file blade nanti tinggal di-looping
-    $task->load('comments.user'); 
+        $task->load('comments.user'); 
 
-    // Buka view show.blade.php dan kirimkan data workspace & task ke sana
-    return view('tasks.show', compact('workspace', 'task'));
+        return view('tasks.show', compact('workspace', 'task'));
     }
 
     
@@ -105,19 +101,16 @@ class CollaborativeTaskController extends Controller
             if ($assigneeIds->isEmpty() && auth()->check()) $assigneeIds->push(auth()->id());
         }
 
-        // 1. CARI ASSIGNEE YANG DICOPOT TUGASNYA
         $oldAssignees = $task->assignees;
         $newAssigneeIdsArray = $assigneeIds->all();
         $removedAssignees = $oldAssignees->filter(function ($user) use ($newAssigneeIdsArray) {
             return !in_array($user->id, $newAssigneeIdsArray);
         });
 
-        // 2. HAPUS EVENT KALENDER MEREKA
         foreach ($removedAssignees as $removedUser) {
             $this->deleteAssigneeCalendarEvent($task, $removedUser, $googleCalendar);
         }
 
-        // 3. UPDATE DATABASE
         DB::transaction(function () use ($task, $validated, $newAssigneeIdsArray, $request) {
             $deadlineFormat = null;
             if ($request->filled('deadline')) {
@@ -135,7 +128,6 @@ class CollaborativeTaskController extends Controller
             $task->assignees()->sync($newAssigneeIdsArray);
         });
 
-        // 4. SYNC KALENDER ANGGOTA YANG BARU / TETAP
         $this->syncAssigneeCalendars($task->fresh('assignees'), $googleCalendar);
 
         return redirect()->route('workspaces.show', ['workspace' => $workspace->id])->with('success', 'Tugas berhasil diperbarui.');
@@ -176,7 +168,6 @@ class CollaborativeTaskController extends Controller
 
         foreach ($task->assignees as $assignee) {
             try {
-                // KIRIM $assignee LANGSUNG (JANGAN DIPANGGIL ULANG), KARENA MEMBAWA DATA PIVOT (EVENT ID)!
                 $event = $googleCalendar->syncCollaborativeTask($task, $assignee);
 
                 if ($event && isset($event['id'])) {

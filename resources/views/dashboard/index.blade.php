@@ -3,21 +3,8 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
-{{--
-    ════════════════════════════════════════════════════════════════
-    SyncFlow Dashboard — Bento Grid Layout
-    Ref Figma : node 60:1273 (desktop) · node 9:121 (mobile)
-    Layout    : 12-col bento grid desktop, single-col mobile
-    Sections  :
-      1. Task Progress (8 cols)       ← row 1
-      2. Next 7 Days (4 cols)         ← row 1
-      3. Calendar (4 cols)            ← row 2
-      4. Tugas Personal (6 cols)      ← row 2
-      5. Tugas Kolaborasi (6 cols)    ← row 2
-    ════════════════════════════════════════════════════════════════
---}}
 
-{{-- ── Top Header ──────────────────────────────────────────────── --}}
+{{-- ── Top Header  --}}
 <div class="mb-10 sm:mb-12 lg:mb-16">
     <p class="font-poppins font-semibold text-[#894e4b] text-lg leading-7">Welcome back,</p>
     <h1 class="font-montserrat font-extrabold text-[#656026] text-4xl sm:text-5xl leading-[1.2] tracking-[-0.02em] mt-1">
@@ -25,15 +12,9 @@
     </h1>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════════
-     BENTO GRID — 12 kolom desktop, 1 kolom mobile
-══════════════════════════════════════════════════════════════ --}}
 <div class="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
 
-    {{-- ══════════════════════════════════════════════
-         ROW 1-A │ Keseluruhan Progres Tugas
-         Desktop: col 1-8  │  Mobile: full
-    ══════════════════════════════════════════════ --}}
+<!-- all tugas -->
     <div class="md:col-span-8 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_12px_0px_rgba(106,20,82,0.08)] p-8 sm:p-10 lg:p-12 relative overflow-hidden flex flex-col gap-6">
         <div class="absolute top-0 left-0 w-32 h-2 bg-[#894e4b] opacity-80 rounded-br-lg rounded-tl-xl"></div>
 
@@ -71,10 +52,7 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════
-         ROW 1-B │ Next 7 Days (Dikasih Scroll)
-         Desktop: col 9-12  │  Mobile: full
-    ══════════════════════════════════════════════ --}}
+<!-- next 7 days -->
     <div class="md:col-span-4 bg-[#ffb3ae] border border-[rgba(179,0,132,0.2)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-[25px] pb-9 px-[25px] flex flex-col gap-6 max-h-[280px]">
         <div class="flex items-center justify-between border-b border-[rgba(137,78,75,0.2)] pb-[13px] shrink-0">
             <h2 class="font-poppins font-semibold text-[#7b4240] text-base leading-6">Next 7 Days</h2>
@@ -85,7 +63,6 @@
             </svg>
         </div>
 
-        {{-- Ini wadah scroll-nya --}}
         <div class="flex flex-col gap-3 overflow-y-auto pr-1">
             @forelse($upcomingItems ?? [] as $item)
                 <div class="flex items-center gap-3 bg-[rgba(255,255,255,0.6)] backdrop-blur-[2px] rounded-lg p-2 shrink-0">
@@ -99,9 +76,7 @@
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden">
                         <p class="font-inter text-md font-semibold text-[#1d1c17] text-xs tracking-[0.6px] truncate">{{ $item->title }}</p>
-                        <!-- <p class="font-inter font-medium {{ $loop->first ? 'text-[#894e4b]' : 'text-[#49473a]' }} text-[11px] leading-[14px]">
-                            Due {{ \Carbon\Carbon::parse($item->date)->format('h:i A') }}
-                        </p> -->
+
                     </div>
                 </div>
             @empty
@@ -110,11 +85,9 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════
-         ROW 2 │ Personal (4) | Collab (4) | Calendar (4)
-    ══════════════════════════════════════════════ --}}
+
     
-    {{-- A. Tugas Personal Belum Selesai (Dikasih Scroll) --}}
+    {{-- A. Tugas Personal Belum Selesai --}}
     <div class="md:col-span-4 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-10 pb-8 px-[25px] relative overflow-hidden flex flex-col gap-6 h-[400px]">
         <div class="absolute top-0 left-0 w-24 h-6 bg-[#fff1f5] border-b border-r border-[rgba(179,0,132,0.2)] rounded-br-lg rounded-tl-xl flex items-center justify-center">
             <span class="font-inter font-bold text-[#b30084] text-[10px] uppercase tracking-[0.5px]">Personal</span>
@@ -125,7 +98,6 @@
             <a href="{{ route('personal.index') }}" class="font-poppins font-medium text-[#b30084] text-sm leading-5 hover:underline shrink-0">View all</a>
         </div>
 
-        {{-- Ini wadah scroll-nya --}}
         <div class="flex flex-col gap-3 overflow-y-auto pr-1">
             @forelse($pendingPersonalTasks ?? [] as $task)
                 @php
@@ -154,7 +126,7 @@
         </div>
     </div>
 
-    {{-- B. Tugas Kolaborasi Belum Selesai (Dikasih Scroll) --}}
+    {{-- B. Tugas Kolaborasi Belum Selesai --}}
     <div class="md:col-span-4 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-10 pb-6 px-[25px] relative overflow-hidden flex flex-col gap-6 h-[400px]">
         <div class="absolute top-0 left-0 w-24 h-6 bg-[#ffb3ae] border-b border-r border-[rgba(137,78,75,0.2)] rounded-br-lg rounded-tl-xl flex items-center justify-center">
             <span class="font-inter font-bold text-[#894e4b] text-[10px] uppercase tracking-[0.5px]">Collab</span>
@@ -165,7 +137,6 @@
             <a href="{{ route('workspaces.index') }}" class="font-poppins font-medium text-[#894e4b] text-sm leading-5 hover:underline shrink-0">View all</a>
         </div>
 
-        {{-- Ini wadah scroll-nya --}}
         <div class="flex flex-col gap-3 overflow-y-auto pr-1">
             @forelse($pendingCollabTasks ?? [] as $task)
                 @php $isReview = strtolower($task->status) === 'review'; @endphp
@@ -173,7 +144,6 @@
                     <div class="shrink-0 w-5 h-5 rounded-full border-2 border-[#cbc7b6]"></div>
                     <div class="flex-1 min-w-0">
                         <p class="font-inter text-[#1d1c17] text-[13px] leading-5 truncate">{{ $task->name ?? $task->title }}</p>
-                        {{-- Menampilkan nama workspace di bawah judul (Poin 7) --}}
                         <p class="font-inter text-[#894e4b] font-medium text-[10px] mt-0.5 truncate border-b border-[#894e4b]/20 pb-[1px] inline-block">
                             @ {{ $task->workspace->name ?? 'Workspace' }}
                         </p>
@@ -236,16 +206,14 @@
     </div>
 
 </div>
-{{-- /BENTO GRID --}}
+{{-- /GRID --}}
 
 @endsection
 
 
 @push('scripts')
 <script>
-// ─────────────────────────────────────────────────────────────
-//  Alpine.js — Calendar Widget
-// ─────────────────────────────────────────────────────────────
+
 function calendarWidget() {
     return {
         today:    new Date(),
@@ -257,16 +225,14 @@ function calendarWidget() {
         get calDays() {
             const y = this.current.getFullYear();
             const m = this.current.getMonth();
-            const firstDay = new Date(y, m, 1).getDay();      // 0=Sun
+            const firstDay = new Date(y, m, 1).getDay();      
             const daysInMonth = new Date(y, m + 1, 0).getDate();
             const prevDays = new Date(y, m, 0).getDate();
             const days = [];
 
-            // Isi slot bulan sebelumnya (faded)
             for (let i = firstDay - 1; i >= 0; i--) {
                 days.push({ d: prevDays - i, outside: true, today: false, selected: false });
             }
-            // Isi hari bulan ini
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(y, m, d);
                 days.push({
@@ -277,7 +243,6 @@ function calendarWidget() {
                     date,
                 });
             }
-            // Isi slot bulan depan (sampai grid penuh)
             const rem = (7 - (days.length % 7)) % 7;
             for (let d = 1; d <= rem; d++) {
                 days.push({ d, outside: true, today: false, selected: false });

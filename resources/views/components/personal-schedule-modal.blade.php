@@ -12,17 +12,15 @@
 @endphp
 
 {{-- 1. Outer Wrapper (Backdrop hitam) --}}
-{{-- Gege ubah items-end sm:items-center menjadi items-center saja agar selalu presisi di tengah layar --}}
 <div id="{{ $id }}" 
      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     
     <div onclick="closeModal('{{ $id }}')" class="absolute inset-0"></div>
 
     {{-- 2. Box Modal Putih --}}
-    {{-- KUNCI UTAMA: Tambahkan flex flex-col dan max-h-[90vh] --}}
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]">
         
-        {{-- Modal Header (Tetap diam di atas, flex-shrink-0 biar gak ikut gepeng) --}}
+        {{-- Modal Header --}}
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-5 border-b border-[rgba(203,199,182,0.3)]">
             <h3 class="font-poppins font-semibold text-[#1d1c17] text-lg">{{ $title }}</h3>
             <button type="button" onclick="closeModal('{{ $id }}')" class="text-[#9b9887] hover:text-[#49473a] transition">
@@ -33,7 +31,6 @@
         </div>
 
         {{-- 3. Form Body --}}
-        {{-- KUNCI KEDUA: Tambahkan flex-1 dan overflow-y-auto agar form ini bisa di-scroll secara mandiri --}}
         <form action="{{ $action }}" method="POST" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
             @csrf
             @if($method !== 'POST')
@@ -98,7 +95,6 @@
                 </div>
 
             {{-- 4. Tombol Footer di Paling Bawah Form --}}
-            {{-- Tambahkan mt-auto agar tombol ini otomatis terdorong ke batas bawah form --}}
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-50 mt-auto">
                 <button type="button" onclick="closeModal('{{ $id }}')"
                         class="font-poppins font-medium text-[#49473a] text-sm px-6 py-[10px] rounded-lg hover:bg-gray-100 transition">

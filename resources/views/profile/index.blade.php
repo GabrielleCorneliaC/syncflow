@@ -106,7 +106,6 @@
 @endsection
 
 <style>
-    /* Pagination style override */
     nav[aria-label="Pagination Navigation"] span,
     nav[aria-label="Pagination Navigation"] a {
         @apply inline-flex items-center px-3 py-1.5 text-sm rounded-lg border border-border mx-0.5 transition;

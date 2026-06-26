@@ -68,13 +68,12 @@ class PersonalTaskController extends Controller
     {
         $task = \App\Models\PersonalTask::findOrFail($id);
         
-        // Logika sinkronisasi seperti di workspace
-        $isDone = $request->status; // true jika dicentang
+        $isDone = $request->status; 
         
         $task->update([
             'is_completed' => $isDone,
-            'progress' => $isDone ? 100 : 0, // Otomatis 100% jika selesai
-            'status' => $isDone ? 'done' : 'todo' // Sesuaikan status
+            'progress' => $isDone ? 100 : 0, 
+            'status' => $isDone ? 'done' : 'todo' 
         ]);
 
         return response()->json(['success' => true]);

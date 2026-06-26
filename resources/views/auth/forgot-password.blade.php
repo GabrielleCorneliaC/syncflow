@@ -3,7 +3,7 @@
 
 @section('content')
 
-{{-- ── PAGE BODY ──────────────────────────────────────── --}}
+{{--  PAGE BODY --}}
 <div class="relative w-full max-w-[440px] mx-auto">
 
     <div class="blob blob-yellow"></div>
@@ -14,7 +14,7 @@
                 flex flex-col gap-6
                 p-[34px] sm:p-[34px]">
 
-        {{-- ── HEADER ── --}}
+        {{--  HEADER  --}}
         <div class="flex flex-col items-center gap-2 pb-2">
             <div class="w-16 h-16 flex items-center justify-center">
                 <img src="{{ asset('assets/logo.png') }}" alt="Logo SyncFlow" class="w-full h-full object-contain">
@@ -41,7 +41,7 @@
         </div>
         @endif
 
-        {{-- ── FORM ── --}}
+        {{--  FORM  --}}
         <form method="POST" action="{{ route('password.update.direct') }}" class="flex flex-col gap-4 pt-2" novalidate>
             @csrf
 
@@ -95,7 +95,7 @@
             </button>
         </form>
 
-        {{-- ── BACK TO LOGIN ── --}}
+        {{--  BACK TO LOGIN  --}}
         <div class="text-center mt-1">
             <a href="{{ route('login') }}"
                class="inline-flex items-center justify-center gap-1.5 font-inter font-medium text-sm text-[#49473a] hover:text-[#b30084] transition-colors">

@@ -11,20 +11,13 @@ use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    // ═══════════════════════════════════════════════
-    //  READ
-    // ═══════════════════════════════════════════════
 
     public function show()
     {
         return view('profile.show', ['user' => Auth::user()]);
     }
 
-    // ═══════════════════════════════════════════════
-    //  UPDATE — nama + email
-    //  Form mengirim first_name + last_name (sesuai Figma)
-    //  Digabung jadi kolom `name` di DB
-    // ═══════════════════════════════════════════════
+
     public function updateInfo(Request $request)
     {
         $user = Auth::user();
@@ -44,22 +37,18 @@ class ProfileController extends Controller
             'avatar.max'          => 'Ukuran foto maks. 2MB.',
         ]);
 
-        // Update nama + email
         $user->update([
             'name'  => trim($request->first_name . ' ' . $request->last_name),
             'email' => $request->email,
         ]);
 
-        // Update avatar jika ada file baru yang diupload
         if ($request->hasFile('avatar')) {
-            // Hapus avatar lama — HANYA jika tersimpan lokal (bukan URL Google)
             if ($user->avatar
                 && ! str_starts_with($user->avatar, 'http')
                 && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }
 
-            // Simpan avatar baru ke storage/app/public/avatars/
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->update(['avatar' => $path]);
         }
@@ -67,9 +56,6 @@ class ProfileController extends Controller
         return back()->with('success_info', 'Profil berhasil diperbarui.');
     }
 
-    // ═══════════════════════════════════════════════
-    //  UPDATE — password
-    // ═══════════════════════════════════════════════
 
     public function updatePassword(Request $request)
     {
@@ -94,54 +80,12 @@ class ProfileController extends Controller
         return back()->with('success_password', 'Password berhasil diperbarui.');
     }
 
-    // ═══════════════════════════════════════════════
-    //  DELETE — hapus akun sendiri
-    // ═══════════════════════════════════════════════
-
-    // public function destroy(Request $request)
-    // {
-    //     $request->validate([
-    //         'password' => ['required'],
-    //     ], [
-    //         'password.required' => 'Password wajib diisi untuk konfirmasi.',
-    //     ]);
-
-    //     $user = Auth::user();
-
-    //     if (! Hash::check($request->password, $user->password)) {
-    //         return back()->withErrors(['password' => 'Password tidak sesuai.']);
-    //     }
-
-    //     if ($user->avatar
-    //         && ! str_starts_with($user->avatar, 'http')
-    //         && Storage::disk('public')->exists($user->avatar)) {
-    //         Storage::disk('public')->delete($user->avatar);
-    //     }
-
-    //     Auth::logout();
-    //     $user->delete();
-
-    //     $request->session()->invalidate();
-    //     $request->session()->regenerateToken();
-
-    //     return redirect()->route('login')
-    //         ->with('success', 'Akun berhasil dihapus.');
-    // }
-
-    // ═══════════════════════════════════════════════
-    //  ADMIN — daftar semua user
-    // ═══════════════════════════════════════════════
-
     public function index()
     {
         $this->authorizeAdmin();
         $users = User::latest()->paginate(10);
         return view('profile.index', compact('users'));
     }
-
-    // ═══════════════════════════════════════════════
-    //  ADMIN — hapus user tertentu
-    // ═══════════════════════════════════════════════
 
     public function adminDestroy(User $user)
     {
@@ -160,10 +104,6 @@ class ProfileController extends Controller
         $user->delete();
         return back()->with('success', 'User ' . $user->name . ' berhasil dihapus.');
     }
-
-    // ═══════════════════════════════════════════════
-    //  HELPER
-    // ═══════════════════════════════════════════════
 
     private function authorizeAdmin(): void
     {

@@ -163,7 +163,6 @@
                             {{-- Judul --}}
                             <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-1">{{ $ws->name }}</h3>
                             
-                            {{-- TAMBAHKAN INI: Deskripsi --}}
                             @if($ws->description)
                                 <p class="text-xs text-[#6a6a6a] line-clamp-2 mt-1">{{ $ws->description }}</p>
                             @endif

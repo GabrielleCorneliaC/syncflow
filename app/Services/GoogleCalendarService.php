@@ -44,12 +44,6 @@ class GoogleCalendarService
         ])->save();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PERSONAL SCHEDULE
-    |--------------------------------------------------------------------------
-    */
-
     public function syncSchedule(PersonalSchedule $schedule): void
     {
         $user = $schedule->user;
@@ -103,11 +97,6 @@ class GoogleCalendarService
             ->throw();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | COLLABORATIVE TASK
-    |--------------------------------------------------------------------------
-    */
 
     public function syncCollaborativeTask(CollaborativeTask $task, User $user): ?array
     {
@@ -167,11 +156,6 @@ class GoogleCalendarService
             ->throw();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | COLLABORATIVE SCHEDULE
-    |--------------------------------------------------------------------------
-    */
 
     public function syncCollaborativeSchedule(CollaborativeSchedule $schedule, User $user): ?array
     {
@@ -211,23 +195,12 @@ class GoogleCalendarService
         return $response;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAYLOAD GOOGLE CALENDAR
-    |--------------------------------------------------------------------------
-    */
+
 
     private function collaborativeTaskPayload(CollaborativeTask $task): array
 {
     $timezone = 'Asia/Jakarta';
 
-    /*
-     * deadline dari database sudah benar:
-     * contoh: 2026-06-26 10:00:00
-     *
-     * Kita baca sebagai jam Jakarta, lalu kirim ke Google
-     * TANPA offset +07:00 supaya tidak ditambah 7 jam lagi.
-     */
     $deadline = Carbon::createFromFormat(
     'Y-m-d H:i:s',
     $task->getRawOriginal('deadline'),
@@ -245,22 +218,12 @@ class GoogleCalendarService
         'summary' => $statusText . '[SyncFlow Task] ' . $task->name,
         'description' => $description,
 
-        /*
-         * Contoh database: 2026-06-26 10:00:00
-         * Google menerima: 2026-06-26T10:00:00
-         * timezone: Asia/Jakarta
-         *
-         * Jadi tampilnya tetap jam 10.00, bukan 17.00.
-         */
         'start' => [
             'dateTime' => $deadline->format('Y-m-d\TH:i:s'),
             'timeZone' => $timezone,
         ],
 
-        /*
-         * Google Calendar perlu end lebih besar dari start.
-         * Dibuat 5 menit saja, jadi task terlihat di jam input kamu.
-         */
+ 
         'end' => [
             'dateTime' => $deadline->copy()
                 ->addMinutes(5)
@@ -312,12 +275,6 @@ class GoogleCalendarService
             ],
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOKEN
-    |--------------------------------------------------------------------------
-    */
 
     private function validAccessToken(User $user): string
     {

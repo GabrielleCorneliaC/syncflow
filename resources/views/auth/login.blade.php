@@ -3,22 +3,10 @@
 
 @section('content')
 
-{{--
-    ════════════════════════════════════════════════════════
-    SyncFlow Login Page
-    Ref Figma: node 1:2 (desktop) · node 8:12 (mobile)
-    Fonts  : Montserrat Bold (heading) · Poppins 500 (button/toggle) · Inter (body)
-    Colors : #f2ede5 input-bg · #cbc7b6 border · #b30084 primary
-             #1d1c17 text · #656026 heading · #49473a soft-text
-    ════════════════════════════════════════════════════════
---}}
-
-{{-- ── PAGE BODY ──────────────────────────────────────── --}}
+{{-- ── PAGE BODY  --}}
 <div class="relative w-full max-w-[440px] mx-auto">
 
-    {{-- Blob kuning kiri atas --}}
     <div class="blob blob-yellow"></div>
-    {{-- Blob pink kanan bawah --}}
     <div class="blob blob-pink"></div>
 
     {{-- ══ GLASS CARD ══ --}}
@@ -210,7 +198,6 @@ function togglePwd(inputId, btn) {
     const input = document.getElementById(inputId);
     const isText = input.type === 'text';
     input.type = isText ? 'password' : 'text';
-    // Swap icon (eye / eye-off)
     btn.innerHTML = isText
         ? `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
