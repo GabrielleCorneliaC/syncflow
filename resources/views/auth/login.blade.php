@@ -111,7 +111,7 @@
                            class="font-inter font-semibold text-xs leading-4 text-[#1d1c17] uppercase tracking-[0.6px]">
                         Password
                     </label>
-                    <a href="#"
+                    <a href="{{ route('password.request') }}"
                        class="font-inter font-medium text-[11px] leading-[14px] text-[#b30084] hover:underline">
                         Forgot?
                     </a>

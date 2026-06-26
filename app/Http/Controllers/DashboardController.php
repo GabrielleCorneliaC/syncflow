@@ -15,38 +15,33 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // ─────────────────────────────────────────────────────────────
-        // 1. STATISTIK PROGRESS (Kiri Atas)
+        // 1. STATISTIK PROGRESS (Poin 1, 2, 3)
         // ─────────────────────────────────────────────────────────────
-        $tasksDone = PersonalTask::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
-           
+        // Ambil total task & task yang done
+        $tasksDone = PersonalTask::where('user_id', $user->id)->where('status', 'done')->count();
         $tasksTotal = PersonalTask::where('user_id', $user->id)->count();
-       
-        // Mencegah error pembagian dengan nol
-        $progressPct = $tasksTotal > 0 ? round(($tasksDone / $tasksTotal) * 100) : 0;
+        
+        // Progress Bar = Rata-rata dari kolom 'progress' di semua personal task
+        $progressAvg = PersonalTask::where('user_id', $user->id)->avg('progress');
+        $progressPct = $progressAvg ? round($progressAvg) : 0;
 
         $stats = [
             'tasks_done'     => $tasksDone,
             'tasks_total'    => $tasksTotal,
             'progress_pct'   => $progressPct,
-           
-            // Info Admin
-            'total_users'    => User::count(),
-            'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
         ];
 
         // ─────────────────────────────────────────────────────────────
-        // 2. NEXT 7 DAYS (Kanan Atas)
+        // 2. NEXT 7 DAYS (Poin 4: Hilangkan yang sudah Done)
         // ─────────────────────────────────────────────────────────────
         $upcomingItems = PersonalTask::where('user_id', $user->id)
+            ->where('status', '!=', 'done') // Jangan tampilkan yang done
             ->whereNotNull('due_date')
-            ->whereBetween('due_date', [Carbon::now(), Carbon::now()->addDays(7)])
+            ->whereBetween('due_date', [\Carbon\Carbon::now(), \Carbon\Carbon::now()->addDays(7)])
             ->orderBy('due_date', 'asc')
             ->take(4)
             ->get()
             ->map(function ($task) {
-                // Di-map menjadi 'date' agar seragam saat dibaca file Blade
                 return (object) [
                     'title' => $task->title,
                     'date'  => $task->due_date
@@ -54,26 +49,27 @@ class DashboardController extends Controller
             });
 
         // ─────────────────────────────────────────────────────────────
-        // 3. TUGAS PERSONAL BELUM SELESAI (Kiri Bawah)
+        // 3. TUGAS PERSONAL BELUM SELESAI (Poin 6: Hilangkan yang Done)
         // ─────────────────────────────────────────────────────────────
         $pendingPersonalTasks = PersonalTask::where('user_id', $user->id)
-            ->where('status', '!=', 'completed')
+            ->where('status', '!=', 'done') // Jangan tampilkan yang done
             ->orderBy('due_date', 'asc')
-            ->take(3)
+            ->take(4) // Tambah jadi 4 biar pas sejajar kalender
             ->get();
 
         // ─────────────────────────────────────────────────────────────
-        // 4. TUGAS KOLABORASI BELUM SELESAI (Kanan Bawah)
+        // 4. TUGAS KOLABORASI BELUM SELESAI (Hanya untuk user yang login)
         // ─────────────────────────────────────────────────────────────
-        // Asumsi relasi ke user di CollaborativeTask adalah 'assignees'
-        $pendingCollabTasks = CollaborativeTask::with('assignees')
-            ->where('status', '!=', 'completed')
-            ->latest()
-            ->take(3)
+        // Gunakan relasi collaborativeTasks() milik user agar HANYA tugas 
+        // dari workspace yang melibatkan user ini saja yang muncul.
+        $pendingCollabTasks = $user->collaborativeTasks()
+            ->with(['assignees', 'workspace'])
+            ->where('collaborative_tasks.status', '!=', 'done') // Jangan tampilkan yang done
+            ->orderBy('collaborative_tasks.created_at', 'desc') // Urutkan dari yang terbaru
+            ->take(4) // Tambah jadi 4 biar pas sejajar kalender
             ->get();
 
-        // Pastikan nama file blade-nya 'dashboard.blade.php' (tanpa folder) atau sesuaikan.
-        return view('dashboard/index', compact(
+        return view('dashboard.index', compact(
             'stats',
             'upcomingItems',
             'pendingPersonalTasks',

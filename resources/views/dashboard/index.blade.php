@@ -11,10 +11,9 @@
     Sections  :
       1. Task Progress (8 cols)       ← row 1
       2. Next 7 Days (4 cols)         ← row 1
-      3. Productivity Chart (8 cols)  ← row 2
-      4. Calendar (4 cols)            ← row 2
-      5. Tugas Personal (6 cols)      ← row 3
-      6. Tugas Kolaborasi (6 cols)    ← row 3
+      3. Calendar (4 cols)            ← row 2
+      4. Tugas Personal (6 cols)      ← row 2
+      5. Tugas Kolaborasi (6 cols)    ← row 2
     ════════════════════════════════════════════════════════════════
 --}}
 
@@ -32,21 +31,12 @@
 <div class="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
 
     {{-- ══════════════════════════════════════════════
-         ROW 1-A │ Section 1: Keseluruhan Progres Tugas
+         ROW 1-A │ Keseluruhan Progres Tugas
          Desktop: col 1-8  │  Mobile: full
     ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-8
-        bg-white border border-[rgba(179,0,132,0.1)] rounded-xl
-        shadow-[0px_4px_12px_0px_rgba(106,20,82,0.08)]
-        p-8 sm:p-10 lg:p-12
-        relative overflow-hidden
-        flex flex-col gap-6
-    ">
-        {{-- Folder tab dekorasi atas kiri --}}
+    <div class="md:col-span-8 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_12px_0px_rgba(106,20,82,0.08)] p-8 sm:p-10 lg:p-12 relative overflow-hidden flex flex-col gap-6">
         <div class="absolute top-0 left-0 w-32 h-2 bg-[#894e4b] opacity-80 rounded-br-lg rounded-tl-xl"></div>
 
-        {{-- Heading --}}
         <div class="flex items-center gap-2 mt-1">
             <svg class="w-[18px] h-[18px] shrink-0 text-[#656026]" viewBox="0 0 18 18" fill="none">
                 <rect x="1" y="1" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -57,53 +47,36 @@
             <h2 class="font-poppins font-semibold text-[#656026] text-xl leading-7">Keseluruhan Progres Tugas</h2>
         </div>
 
-        {{-- Progress + Angka --}}
         <div class="flex items-center gap-6">
-            {{-- Progress bar area --}}
             <div class="flex-1 flex flex-col gap-2">
                 <div class="flex items-center justify-between">
                     <span class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Current Term</span>
                     <span class="font-poppins font-semibold text-[#b30084] text-base leading-6">
-                        {{ $stats['progress_pct'] ?? 65 }}%
+                        {{ $stats['progress_pct'] ?? 0 }}%
                     </span>
                 </div>
-                {{-- Progress bar --}}
                 <div class="w-full h-4 bg-[rgba(179,0,132,0.1)] border border-[rgba(179,0,132,0.05)] rounded-full p-px overflow-hidden">
-                    <div class="h-full rounded-full bg-gradient-to-r from-[#b30084] to-[#894e4b]
-                                relative overflow-hidden transition-all duration-700"
-                         style="width: {{ $stats['progress_pct'] ?? 65 }}%">
-                        {{-- Shimmer stripe --}}
-                        <div class="absolute inset-0 opacity-20"
-                             style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 4px, transparent 4px, transparent 8px)">
-                        </div>
+                    <div class="h-full rounded-full bg-gradient-to-r from-[#b30084] to-[#894e4b] relative overflow-hidden transition-all duration-700"
+                         style="width: {{ $stats['progress_pct'] ?? 0 }}%">
+                        <div class="absolute inset-0 opacity-20" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 4px, transparent 4px, transparent 8px)"></div>
                     </div>
                 </div>
             </div>
 
-            {{-- Angka bulat --}}
-            <div class="shrink-0 w-24 h-24 rounded-full border-4 border-[#e6e2da]
-                        flex items-center justify-center
-                        shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)]">
+            <div class="shrink-0 w-24 h-24 rounded-full border-4 border-[#e6e2da] flex items-center justify-center shadow-[inset_0px_2px_4px_0px_rgba(0,0,0,0.05)]">
                 <span class="font-montserrat font-bold text-[#656026] text-2xl leading-8">
-                    {{ $stats['tasks_done'] ?? 12 }}/{{ $stats['tasks_total'] ?? 18 }}
+                    {{ $stats['tasks_done'] ?? 0 }}/{{ $stats['tasks_total'] ?? 0 }}
                 </span>
             </div>
         </div>
     </div>
 
     {{-- ══════════════════════════════════════════════
-         ROW 1-B │ Section 2: Next 7 Days
+         ROW 1-B │ Next 7 Days (Dikasih Scroll)
          Desktop: col 9-12  │  Mobile: full
     ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-4
-        bg-[#ffb3ae] border border-[rgba(179,0,132,0.2)] rounded-xl
-        shadow-[0px_4px_6px_rgba(106,20,82,0.08)]
-        pt-[25px] pb-9 px-[25px]
-        flex flex-col gap-6
-    ">
-        {{-- Header --}}
-        <div class="flex items-center justify-between border-b border-[rgba(137,78,75,0.2)] pb-[13px]">
+    <div class="md:col-span-4 bg-[#ffb3ae] border border-[rgba(179,0,132,0.2)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-[25px] pb-9 px-[25px] flex flex-col gap-6 max-h-[280px]">
+        <div class="flex items-center justify-between border-b border-[rgba(137,78,75,0.2)] pb-[13px] shrink-0">
             <h2 class="font-poppins font-semibold text-[#7b4240] text-base leading-6">Next 7 Days</h2>
             <svg class="w-[18px] h-5 text-[#7b4240]" viewBox="0 0 18 20" fill="none">
                 <rect x="1" y="3" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
@@ -112,12 +85,11 @@
             </svg>
         </div>
 
-        {{-- List items --}}
-        <div class="flex flex-col gap-3">
+        {{-- Ini wadah scroll-nya --}}
+        <div class="flex flex-col gap-3 overflow-y-auto pr-1">
             @forelse($upcomingItems ?? [] as $item)
-                <div class="flex items-center gap-3 bg-[rgba(255,255,255,0.6)] backdrop-blur-[2px] rounded-lg p-2">
-                    <div class="shrink-0 w-10 h-10 rounded-md {{ $loop->first ? 'bg-[#b30084]' : 'bg-[#e6e2da]' }}
-                                flex flex-col items-center justify-center">
+                <div class="flex items-center gap-3 bg-[rgba(255,255,255,0.6)] backdrop-blur-[2px] rounded-lg p-2 shrink-0">
+                    <div class="shrink-0 w-10 h-10 rounded-md {{ $loop->first ? 'bg-[#b30084]' : 'bg-[#e6e2da]' }} flex flex-col items-center justify-center">
                         <span class="font-inter font-bold {{ $loop->first ? 'text-white' : 'text-[#1d1c17]' }} text-[10px] uppercase leading-[15px]">
                             {{ \Carbon\Carbon::parse($item->date)->format('D') }}
                         </span>
@@ -126,10 +98,10 @@
                         </span>
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden">
-                        <p class="font-inter font-semibold text-[#1d1c17] text-xs tracking-[0.6px] truncate">{{ $item->title }}</p>
-                        <p class="font-inter font-medium {{ $loop->first ? 'text-[#894e4b]' : 'text-[#49473a]' }} text-[11px] leading-[14px]">
+                        <p class="font-inter text-md font-semibold text-[#1d1c17] text-xs tracking-[0.6px] truncate">{{ $item->title }}</p>
+                        <!-- <p class="font-inter font-medium {{ $loop->first ? 'text-[#894e4b]' : 'text-[#49473a]' }} text-[11px] leading-[14px]">
                             Due {{ \Carbon\Carbon::parse($item->date)->format('h:i A') }}
-                        </p>
+                        </p> -->
                     </div>
                 </div>
             @empty
@@ -139,75 +111,115 @@
     </div>
 
     {{-- ══════════════════════════════════════════════
-         ROW 2-A │ Section 3: Productivity Weekly Trend
-         Desktop: col 1-8  │  Mobile: full
+         ROW 2 │ Personal (4) | Collab (4) | Calendar (4)
     ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-8
-        bg-white border border-[rgba(179,0,132,0.1)] rounded-xl
-        shadow-[0px_4px_6px_rgba(106,20,82,0.08)]
-        p-6 relative overflow-hidden
-    " style="min-height: 320px;">
+    
+    {{-- A. Tugas Personal Belum Selesai (Dikasih Scroll) --}}
+    <div class="md:col-span-4 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-10 pb-8 px-[25px] relative overflow-hidden flex flex-col gap-6 h-[400px]">
+        <div class="absolute top-0 left-0 w-24 h-6 bg-[#fff1f5] border-b border-r border-[rgba(179,0,132,0.2)] rounded-br-lg rounded-tl-xl flex items-center justify-center">
+            <span class="font-inter font-bold text-[#b30084] text-[10px] uppercase tracking-[0.5px]">Personal</span>
+        </div>
 
-        <h2 class="font-poppins font-medium text-[#656026] text-base leading-6 mb-4">Productivity Weekly Trend</h2>
+        <div class="flex items-center justify-between shrink-0 mt-2">
+            <h2 class="font-poppins font-medium text-[#656026] text-[15px] leading-6 truncate pr-2">Tugas Personal</h2>
+            <a href="{{ route('personal.index') }}" class="font-poppins font-medium text-[#b30084] text-sm leading-5 hover:underline shrink-0">View all</a>
+        </div>
 
-        {{-- Chart.js canvas --}}
-        <div class="relative" style="height: 220px;">
-            <canvas id="productivityChart"></canvas>
+        {{-- Ini wadah scroll-nya --}}
+        <div class="flex flex-col gap-3 overflow-y-auto pr-1">
+            @forelse($pendingPersonalTasks ?? [] as $task)
+                @php
+                    $isHigh = ($task->priority === 'high');
+                    $isOverdue = isset($task->due_date) && \Carbon\Carbon::parse($task->due_date)->isPast();
+                @endphp
+                <div class="flex items-center gap-3 {{ $isHigh ? 'bg-[rgba(255,241,245,0.3)] border-[rgba(179,0,132,0.4)]' : 'bg-[#fdf9f0] border-[rgba(203,199,182,0.4)]' }} border rounded-lg p-3 shrink-0">
+                    <div class="shrink-0 w-5 h-5 rounded-full border-2 border-[#cbc7b6]"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-inter {{ $isHigh ? 'font-medium' : '' }} text-[#1d1c17] text-[13px] leading-5 truncate">{{ $task->title ?? $task->name }}</p>
+                        
+                        @if($isOverdue)
+                        <div class="flex items-center gap-1 mt-0.5">
+                            <svg class="w-[11px] h-[9.5px] text-[#ba1a1a]" viewBox="0 0 12 10" fill="none"><path d="M6 1L11 9H1L6 1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 4v2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="8" r="0.5" fill="currentColor"/></svg>
+                            <span class="font-inter text-[#ba1a1a] text-xs leading-4">Overdue</span>
+                        </div>
+                        @endif
+                    </div>
+                    <span class="shrink-0 {{ $isHigh ? 'bg-[#b30084] text-white shadow-[0px_1px_1px_rgba(0,0,0,0.05)]' : 'bg-[#f2ede5] text-[#49473a] border border-[rgba(203,199,182,0.3)] tracking-[0.5px]' }} rounded font-inter font-bold text-[9px] uppercase px-2 py-1">
+                        {{ $task->status ?? 'PENDING' }}
+                    </span>
+                </div>
+            @empty
+                <p class="text-sm text-[#49473a] text-center py-4">Semua tugas personal beres!</p>
+            @endforelse
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════
-         ROW 2-B │ Section 4: Calendar
-         Desktop: col 9-12  │  Mobile: full
-    ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-4
-        bg-white border border-[rgba(179,0,132,0.1)] rounded-xl
-        shadow-[0px_4px_6px_rgba(106,20,82,0.08)]
-        pt-[25px] pb-6 px-[25px]
-        flex flex-col gap-2
-    ">
-        {{-- Wrapper Utama Kalender (Bikin nyusun ke bawah) --}}
-        <div class="w-full flex flex-col" x-data="calendarWidget()">
+    {{-- B. Tugas Kolaborasi Belum Selesai (Dikasih Scroll) --}}
+    <div class="md:col-span-4 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-10 pb-6 px-[25px] relative overflow-hidden flex flex-col gap-6 h-[400px]">
+        <div class="absolute top-0 left-0 w-24 h-6 bg-[#ffb3ae] border-b border-r border-[rgba(137,78,75,0.2)] rounded-br-lg rounded-tl-xl flex items-center justify-center">
+            <span class="font-inter font-bold text-[#894e4b] text-[10px] uppercase tracking-[0.5px]">Collab</span>
+        </div>
 
-            {{-- Header Kalender: < Bulan Tahun > --}}
-            <div class="flex items-center justify-between mb-4 px-2">
-                {{-- Tombol Kiri (<) --}}
-                <button @click="prev()"
-                        class="p-2 rounded-lg hover:bg-[#f2ede5] transition text-[#49473a] flex items-center justify-center">
-                    <svg class="w-[8px] h-[12px]" viewBox="0 0 5 8" fill="none">
-                        <path d="M4 1L1 4L4 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <div class="flex items-center justify-between shrink-0 mt-2">
+            <h2 class="font-poppins font-medium text-[#656026] text-[15px] leading-6 truncate pr-2">Tugas Kolaborasi</h2>
+            <a href="{{ route('workspaces.index') }}" class="font-poppins font-medium text-[#894e4b] text-sm leading-5 hover:underline shrink-0">View all</a>
+        </div>
+
+        {{-- Ini wadah scroll-nya --}}
+        <div class="flex flex-col gap-3 overflow-y-auto pr-1">
+            @forelse($pendingCollabTasks ?? [] as $task)
+                @php $isReview = strtolower($task->status) === 'review'; @endphp
+                <div class="flex items-center gap-3 bg-[#fdf9f0] border border-[rgba(203,199,182,0.4)] rounded-lg p-3 shrink-0">
+                    <div class="shrink-0 w-5 h-5 rounded-full border-2 border-[#cbc7b6]"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-inter text-[#1d1c17] text-[13px] leading-5 truncate">{{ $task->name ?? $task->title }}</p>
+                        {{-- Menampilkan nama workspace di bawah judul (Poin 7) --}}
+                        <p class="font-inter text-[#894e4b] font-medium text-[10px] mt-0.5 truncate border-b border-[#894e4b]/20 pb-[1px] inline-block">
+                            @ {{ $task->workspace->name ?? 'Workspace' }}
+                        </p>
+                        
+                        @if(isset($task->assignees) && $task->assignees->count() > 0)
+                        <div class="flex items-center mt-1.5">
+                            @foreach($task->assignees->take(3) as $user)
+                                <div class="w-4 h-4 rounded-full bg-[#{{ substr(md5($user->name), 0, 6) }}] border border-white {{ !$loop->first ? '-ml-1.5' : '' }} flex items-center justify-center font-inter text-[7px] text-white font-normal">
+                                    {{ substr($user->name, 0, 1) }}
+                                </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    <span class="shrink-0 {{ $isReview ? 'bg-[#894e4b] text-white' : 'bg-[#f2ede5] text-[#49473a] border border-[rgba(203,199,182,0.3)] tracking-[0.5px]' }} rounded font-inter font-bold text-[9px] uppercase px-2 py-1">
+                        {{ $task->status ?? 'PENDING' }}
+                    </span>
+                </div>
+            @empty
+                <p class="text-sm text-[#49473a] text-center py-4">Kerja tim yang bagus, tidak menunggak!</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- C. Calendar --}}
+    <div class="md:col-span-4 bg-white border border-[rgba(179,0,132,0.1)] rounded-xl shadow-[0px_4px_6px_rgba(106,20,82,0.08)] pt-[25px] pb-6 px-[25px] flex flex-col h-[400px]">
+        <div class="w-full flex flex-col h-full" x-data="calendarWidget()">
+            <div class="flex items-center justify-between mb-4 px-2 shrink-0">
+                <button @click="prev()" class="p-2 rounded-lg hover:bg-[#f2ede5] transition text-[#49473a] flex items-center justify-center">
+                    <svg class="w-[8px] h-[12px]" viewBox="0 0 5 8" fill="none"><path d="M4 1L1 4L4 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-
-                {{-- Teks Bulan Tahun --}}
-                <h2 class="font-poppins font-semibold text-[#656026] text-lg leading-6"
-                    x-text="monthYear"></h2>
-
-                {{-- Tombol Kanan (>) --}}
-                <button @click="next()"
-                        class="p-2 rounded-lg hover:bg-[#f2ede5] transition text-[#49473a] flex items-center justify-center">
-                    <svg class="w-[8px] h-[12px]" viewBox="0 0 5 8" fill="none">
-                        <path d="M1 1L4 4L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                <h2 class="font-poppins font-semibold text-[#656026] text-lg leading-6" x-text="monthYear"></h2>
+                <button @click="next()" class="p-2 rounded-lg hover:bg-[#f2ede5] transition text-[#49473a] flex items-center justify-center">
+                    <svg class="w-[8px] h-[12px]" viewBox="0 0 5 8" fill="none"><path d="M1 1L4 4L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
             </div>
 
-            {{-- Bagian Hari & Tanggal --}}
-            <div class="w-full">
-                {{-- Nama Hari (S M T W T F S) --}}
-                <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="w-full flex-1 flex flex-col justify-center">
+                <div class="grid grid-cols-7 gap-1 mb-2 shrink-0">
                     <template x-for="d in ['S','M','T','W','T','F','S']">
-                        <div class="text-center font-inter font-medium text-[#7a7769] text-sm leading-6"
-                             x-text="d"></div>
+                        <div class="text-center font-inter font-medium text-[#7a7769] text-[13px] leading-6" x-text="d"></div>
                     </template>
                 </div>
-                
-                {{-- Angka Tanggal --}}
-                <div class="grid grid-cols-7 gap-1">
+                <div class="grid grid-cols-7 gap-y-2 gap-x-1">
                     <template x-for="(day, i) in calDays" :key="i">
-                        <div class="flex flex-col items-center justify-center rounded py-2 text-sm leading-6 cursor-pointer transition relative"
+                        <div class="flex flex-col items-center justify-center rounded py-[6px] text-sm leading-6 cursor-pointer transition relative"
                              :class="{
                                  'text-[#e6e2da]': day.outside,
                                  'text-[#1d1c17]': !day.outside && !day.today && !day.selected,
@@ -220,124 +232,6 @@
                     </template>
                 </div>
             </div>
-
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════
-         ROW 3-A │ Tugas Personal Belum Selesai
-         Desktop: col 1-6  │  Mobile: full
-    ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-6
-        bg-white border border-[rgba(179,0,132,0.1)] rounded-xl
-        shadow-[0px_4px_6px_rgba(106,20,82,0.08)]
-        pt-10 pb-8 px-[25px]
-        relative overflow-hidden
-        flex flex-col gap-6
-    ">
-        {{-- Folder tab atas kiri --}}
-        <div class="absolute top-0 left-0 w-24 h-6
-                    bg-[#fff1f5] border-b border-r border-[rgba(179,0,132,0.2)]
-                    rounded-br-lg rounded-tl-xl
-                    flex items-center justify-center">
-            <span class="font-inter font-bold text-[#b30084] text-[10px] uppercase tracking-[0.5px]">Personal</span>
-        </div>
-
-        {{-- Heading --}}
-        <div class="flex items-center justify-between">
-            <h2 class="font-poppins font-medium text-[#656026] text-base leading-6">Tugas Personal Belum Selesai</h2>
-            <a href="#" class="font-poppins font-medium text-[#b30084] text-sm leading-5 hover:underline">View all</a>
-        </div>
-
-        {{-- List --}}
-        <div class="flex flex-col gap-3">
-            @forelse($pendingPersonalTasks ?? [] as $task)
-                @php
-                    $isHigh = ($task->priority === 'high');
-                    $isOverdue = isset($task->due_date) && \Carbon\Carbon::parse($task->due_date)->isPast();
-                @endphp
-                <div class="flex items-center gap-4 {{ $isHigh ? 'bg-[rgba(255,241,245,0.3)] border-[rgba(179,0,132,0.4)]' : 'bg-[#fdf9f0] border-[rgba(203,199,182,0.4)]' }} border rounded-lg p-[13px]">
-                    <div class="shrink-0 w-5 h-5 rounded-full border-2 border-[#cbc7b6]"></div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-inter {{ $isHigh ? 'font-medium' : '' }} text-[#1d1c17] text-base leading-6">{{ $task->title ?? $task->name }}</p>
-                        
-                        @if($isOverdue)
-                        <div class="flex items-center gap-1 mt-0.5">
-                            <svg class="w-[11px] h-[9.5px] text-[#ba1a1a]" viewBox="0 0 12 10" fill="none">
-                                <path d="M6 1L11 9H1L6 1Z" stroke="currentColor" stroke-width="1.2"/>
-                                <path d="M6 4v2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                                <circle cx="6" cy="8" r="0.5" fill="currentColor"/>
-                            </svg>
-                            <span class="font-inter text-[#ba1a1a] text-xs leading-4">Overdue</span>
-                        </div>
-                        @endif
-                    </div>
-                    <span class="shrink-0 {{ $isHigh ? 'bg-[#b30084] text-white shadow-[0px_1px_1px_rgba(0,0,0,0.05)]' : 'bg-[#f2ede5] text-[#49473a] border border-[rgba(203,199,182,0.3)] tracking-[0.5px]' }} rounded font-inter font-bold text-[10px] uppercase px-[9px] py-[5px]">
-                        {{ $task->status ?? 'PENDING' }}
-                    </span>
-                </div>
-            @empty
-                <p class="text-sm text-[#49473a] text-center py-4">Semua tugas personal beres! 🎉</p>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════
-         ROW 3-B │ Tugas Kolaborasi Belum Selesai
-         Desktop: col 7-12  │  Mobile: full
-    ══════════════════════════════════════════════ --}}
-    <div class="
-        md:col-span-6
-        bg-white border border-[rgba(179,0,132,0.1)] rounded-xl
-        shadow-[0px_4px_6px_rgba(106,20,82,0.08)]
-        pt-10 pb-6 px-[25px]
-        relative overflow-hidden
-        flex flex-col gap-6
-    ">
-        {{-- Folder tab atas kiri (pink-red) --}}
-        <div class="absolute top-0 left-0 w-24 h-6
-                    bg-[#ffb3ae] border-b border-r border-[rgba(137,78,75,0.2)]
-                    rounded-br-lg rounded-tl-xl
-                    flex items-center justify-center">
-            <span class="font-inter font-bold text-[#894e4b] text-[10px] uppercase tracking-[0.5px]">Collab</span>
-        </div>
-
-        {{-- Heading --}}
-        <div class="flex items-center justify-between">
-            <h2 class="font-poppins font-medium text-[#656026] text-base leading-6">Tugas Kolaborasi Belum Selesai</h2>
-            <a href="#" class="font-poppins font-medium text-[#894e4b] text-sm leading-5 hover:underline">View all</a>
-        </div>
-
-        {{-- List --}}
-        <div class="flex flex-col gap-3">
-            @forelse($pendingCollabTasks ?? [] as $task)
-                @php
-                    $isReview = strtolower($task->status) === 'review';
-                @endphp
-                <div class="flex items-center gap-4 bg-[#fdf9f0] border border-[rgba(203,199,182,0.4)] rounded-lg p-[13px]">
-                    <div class="shrink-0 w-5 h-5 rounded-full border-2 border-[#cbc7b6]"></div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-inter text-[#1d1c17] text-base leading-6">{{ $task->name ?? $task->title }}</p>
-                        
-                        {{-- Avatar stack --}}
-                        @if(isset($task->assignees) && $task->assignees->count() > 0)
-                        <div class="flex items-center mt-2">
-                            @foreach($task->assignees->take(3) as $user)
-                                <div class="w-5 h-5 rounded-full bg-[#{{ substr(md5($user->name), 0, 6) }}] border border-white {{ !$loop->first ? '-ml-2' : '' }} flex items-center justify-center font-inter text-[8px] text-white font-normal leading-[12px]">
-                                    {{ substr($user->name, 0, 1) }}
-                                </div>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
-                    <span class="shrink-0 {{ $isReview ? 'bg-[#894e4b] text-white' : 'bg-[#f2ede5] text-[#49473a] border border-[rgba(203,199,182,0.3)] tracking-[0.5px]' }} rounded font-inter font-bold text-[10px] uppercase px-[9px] py-[5px]">
-                        {{ $task->status ?? 'PENDING' }}
-                    </span>
-                </div>
-            @empty
-                <p class="text-sm text-[#49473a] text-center py-4">Kerja tim yang bagus, tidak ada tugas menunggak! 🚀</p>
-            @endforelse
         </div>
     </div>
 
@@ -349,76 +243,6 @@
 
 @push('scripts')
 <script>
-// ─────────────────────────────────────────────────────────────
-//  Chart.js — Productivity Weekly Trend
-//  Bar chart sesuai Figma: warna & tinggi dari desain
-// ─────────────────────────────────────────────────────────────
-(function () {
-    const ctx = document.getElementById('productivityChart');
-    if (!ctx) return;
-
-    // Data & warna dari Figma (M T W T F S S)
-    const data   = [30, 50, 80, 40, 60, 20, 90];
-    const days   = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const colors = [
-        '#ffb3ae',          // M  – soft pink
-        '#fff1f5',          // T  – lighter pink
-        '#b30084',          // W  – primary magenta (paling tinggi)
-        '#ffb3ae',          // T  – soft pink
-        '#fff1f5',          // F  – lighter pink
-        '#e6e2da',          // S  – beige netral
-        '#b30084',          // S  – primary magenta (paling tinggi)
-    ];
-    const glows = colors.map(c => c === '#b30084' ? 'rgba(179,0,132,0.35)' : 'transparent');
-
-    Chart.defaults.font.family = "'Inter', sans-serif";
-    Chart.defaults.color       = '#7a7769';
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: days,
-            datasets: [{
-                data,
-                backgroundColor: colors,
-                borderRadius:    { topLeft: 2, topRight: 2 },
-                borderSkipped:   false,
-                barPercentage:   0.55,
-                categoryPercentage: 0.7,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1d1c17',
-                    titleColor:      '#cbc7b6',
-                    bodyColor:       '#fff',
-                    padding:         8,
-                    cornerRadius:    6,
-                    callbacks: {
-                        label: ctx => ` ${ctx.parsed.y} tasks`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid:   { display: false },
-                    border: { display: false },
-                    ticks:  { font: { size: 12 }, color: '#7a7769' }
-                },
-                y: {
-                    display: false,
-                    beginAtZero: true,
-                    grid: { color: 'rgba(203,199,182,0.3)', drawBorder: false },
-                }
-            }
-        }
-    });
-})();
-
 // ─────────────────────────────────────────────────────────────
 //  Alpine.js — Calendar Widget
 // ─────────────────────────────────────────────────────────────
