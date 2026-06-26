@@ -58,12 +58,7 @@
                             </div>
 
                             <div class="relative z-30 p-4 h-full flex flex-col justify-between">
-                                <div class="flex justify-end">
-                                    <button onclick="event.preventDefault(); openInviteModal({{ $ws->id }})"
-                                        class="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 text-white backdrop-blur-sm">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                                    </button>
-                                </div>
+                               
                                 <div>
                                     <p class="text-white font-bold text-lg leading-tight mb-1 line-clamp-1">{{ $ws->name }}</p>
                                     @if($ws->description)
@@ -87,12 +82,7 @@
                             {{-- Trik CSS menutupi border bawah tab --}}
                             <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#f4a3a4] -translate-y-[1px] z-20"></div>
 
-                            <div class="flex items-start justify-between relative z-30">
-                               
-                                <button onclick="event.preventDefault(); openInviteModal({{ $ws->id }})" class="text-[#4a4a4a] hover:text-black transition-colors">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                                </button>
-                            </div>
+                            
 
                             <div class="relative z-30">
                                 <h3 class="font-semibold text-lg text-[#2a2a2a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
@@ -400,25 +390,6 @@
 
     document.getElementById('unsplash-query')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchUnsplash(); } });
 
-    function openInviteModal(workspaceId) {
-        let id = workspaceId;
-        if (!id) {
-            const parts = window.location.pathname.split('/').filter(Boolean);
-            const idx = parts.indexOf('workspaces');
-            if (idx !== -1 && parts.length > idx + 1) id = parts[idx + 1];
-        }
-        if (!id) return alert('Workspace ID tidak ditemukan.');
-
-        const form = document.getElementById('invite-form');
-        form.action = `/workspaces/${id}/members`;
-        document.getElementById('modal-invite').classList.remove('hidden');
-    }
-
-    function closeInviteModal() {
-        document.getElementById('modal-invite').classList.add('hidden');
-        const form = document.getElementById('invite-form');
-        form.action = '#';
-        form.reset();
-    }
+   
 </script>
 @endpush

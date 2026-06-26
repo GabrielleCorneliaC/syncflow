@@ -150,7 +150,7 @@ public function index()
         // 3. Proses Pengiriman Email (Sesuai kodingan aslimu)
         try {
             // MATIKAN SEMENTARA BARIS INI SAMPAI TEMANMU MEMBUAT FILE-NYA
-            Mail::to($email)->send(new \App\Mail\WorkspaceInviteMail($workspace, $email));
+            Mail::to($email)->send(new \App\Mail\WorkspaceInvite($workspace, $email));
             
             // Tambahkan log simulasi agar kita tahu sistemnya sebenarnya berjalan
             \Log::info("Simulasi undangan ($role) berhasil dikirim ke: " . $email);
