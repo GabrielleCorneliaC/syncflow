@@ -33,18 +33,19 @@
          Tinggi dikurangi agar proporsional di dalam
          main content yang sudah punya padding dari layouts.app
     ══════════════════════════════════════════ --}}
-    <div class="relative overflow-hidden rounded-2xl border border-border
+    <div class="relative overflow-visible rounded-2xl border border-border
                 shadow-[3px_3px_0px_#cbc7b6] mb-6"
          style="height: 156px;">
 
-        {{-- Cover image / fallback gradient brand --}}
+        {{-- Cover image / fallback gradient brand — Tambahkan rounded-2xl di sini --}}
         @if($workspace->cover_image)
             <img src="{{ $workspace->cover_image }}" alt="{{ $workspace->name }}"
-                 class="w-full h-full object-cover">
+                 class="w-full h-full object-cover rounded-2xl">
         @else
-            <div class="w-full h-full bg-gradient-to-br from-accent to-primary"></div>
+            <div class="w-full h-full bg-gradient-to-br from-accent to-primary rounded-2xl"></div>
         @endif
-        <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent"></div>
+        {{-- Tambahkan juga rounded-2xl di overlay hitamnya --}}
+        <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent rounded-2xl"></div>
 
         {{-- Back + Title --}}
         <div class="absolute inset-0 flex items-center px-6">
@@ -57,7 +58,7 @@
                     </svg>
                     Back to Workspaces
                 </a>
-                <h1 class="font-heading font-bold text-5xl text-white">{{ $workspace->name }}</h1>
+                <h1 class="font-heading font-bold text-4xl text-white">{{ $workspace->name }}</h1>
                 @if($workspace->description)
                 <p class="text-white/70 text-xs mt-0.5">{{ $workspace->description }}</p>
                 @endif
@@ -66,41 +67,59 @@
 
         {{-- Admin actions — hanya owner --}}
         @if(!empty($isOwner))
-        <div class="absolute top-4 right-5 flex items-center gap-2 z-20">
+        <div class="absolute top-4 right-5 flex items-center z-20" x-data="{ openHeader: false }">
 
-            {{-- Connect Google Calendar --}}
-            <a href="{{ route('google.calendar.redirect') }}"
-               class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-gray-700 hover:bg-white transition-all">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
-                    <path d="M7 8h10M7 12h10M7 16h6"/>
-                </svg>
-                {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
-            </a>
+            {{-- TAMPILAN DESKTOP (Sembunyi di Mobile) --}}
+            <div class="hidden md:flex items-center gap-2">
+                <a href="{{ route('google.calendar.redirect') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-gray-700 hover:bg-white transition-all">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+                    {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
+                </a>
+                <button onclick="openInviteModal({{ $workspace->id }})" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-primary hover:bg-white transition-all">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Invite
+                </button>
+                <button onclick="openEditWorkspaceModal()" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-textmain hover:bg-white transition-all">Edit</button>
+                <button onclick="openModal('modal-delete-workspace')" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">Delete</button>
+            </div>
 
-            {{-- Invite --}}
-            <button onclick="openInviteModal({{ $workspace->id }})"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-primary hover:bg-white transition-all">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <line x1="19" y1="8" x2="19" y2="14"/>
-                    <line x1="22" y1="11" x2="16" y2="11"/>
-                </svg>
-                Invite
-            </button>
+            {{-- TAMPILAN MOBILE (Kebab Menu, Sembunyi di Desktop) --}}
+            <div class="md:hidden relative">
+                <button @click="openHeader = !openHeader" @click.outside="openHeader = false"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 text-textmain shadow-sm">
+                    <svg class="w-1 h-4" viewBox="0 0 4 16" fill="currentColor">
+                        <circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/>
+                    </svg>
+                </button>
 
-            {{-- Edit --}}
-            <button onclick="openEditWorkspaceModal()"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-textmain hover:bg-white transition-all">
-                Edit
-            </button>
+                <div x-show="openHeader" style="display: none;" x-transition
+                    class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-xl shadow-lg py-1 z-[9999]">
+                    
+                    {{-- Tombol Google Calendar (Tambah active:bg-gray-200) --}}
+                    <a href="{{ route('google.calendar.redirect') }}" 
+                    class="block w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 transition-colors duration-200">
+                        {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
+                    </a>
 
-            {{-- Delete --}}
-            <button onclick="openModal('modal-delete-workspace')"
-                class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white transition-all">
-                Delete
-            </button>
+                    {{-- Tombol Invite (Tambah active:bg-[#ffdbed] biar pas ditekan pinknya lebih nyata) --}}
+                    <button onclick="openInviteModal({{ $workspace->id }})" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-primary hover:bg-[#FFF0F6] hover:text-[#a6007a] active:bg-[#ffdbed] transition-colors duration-200">
+                        Invite
+                    </button>
+
+                    {{-- Tombol Edit Workspace (Tambah active:bg-gray-200) --}}
+                    <button onclick="openEditWorkspaceModal()" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-textmain hover:bg-gray-100 hover:text-black active:bg-gray-200 transition-colors duration-200">
+                        Edit Workspace
+                    </button>
+
+                    {{-- Tombol Delete Workspace (Tambah active:bg-red-100) --}}
+                    <button onclick="openModal('modal-delete-workspace')" 
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100 transition-colors duration-200">
+                        Delete Workspace
+                    </button>
+                </div>
+            </div>
         </div>
         @endif
     </div>
@@ -111,7 +130,7 @@
          brand (#b30084) sesuai layouts.app
     ══════════════════════════════════════════ --}}
     <div class="border-b border-border mb-6">
-        <div class="flex gap-1">
+        <div class="flex gap-1 overflow-x-auto whitespace-nowrap pb-1">
 
             {{-- Tab: List Task --}}
             <button onclick="switchTab('task')" id="tab-task"
@@ -183,9 +202,8 @@
         </div>
 
         {{-- Tabel task --}}
-        <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]" >
-            <table class="w-full border-collapse">
+        <div class="bg-surface rounded-2xl border border-border shadow-[2px_2px_0px_#cbc7b6] overflow-x-auto min-h-[400px]" >
+            <table class="w-full border-collapse min-w-[800px]">
                 <thead>
                     <tr class="border-b border-border text-xs font-bold text-textsoft uppercase bg-gray-50/50">
                         <th class="px-5 py-3 w-12 text-center">Check</th>
@@ -439,9 +457,8 @@
             </button>
         </div>
 
-        <div class="bg-surface rounded-2xl border border-border
-                    shadow-[2px_2px_0px_#cbc7b6] overflow-visible min-h-[400px]">
-            <table class="w-full text-sm">
+        <div class="bg-surface rounded-2xl border border-border shadow-[2px_2px_0px_#cbc7b6] overflow-x-auto min-h-[400px]">
+            <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-border">
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-texthint uppercase tracking-wider w-4"></th>
@@ -955,14 +972,17 @@
 
 {{-- ════ MODAL: EDIT WORKSPACE ════ --}}
 <div id="modal-edit-workspace"
-     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
-         class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+         class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+         
+    {{-- 1. Box Putih: Tambahkan flex flex-col dan max-h-[90vh] --}}
     <div class="relative bg-surface rounded-2xl border border-border
                 shadow-[6px_6px_0px_#cbc7b6]
-                w-full max-w-md p-6 z-10">
+                w-full max-w-md z-10 flex flex-col max-h-[90vh]">
 
-        <div class="flex items-center justify-between mb-5">
+        {{-- 2. Header: flex-shrink-0 biar tetap diam di atas --}}
+        <div class="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b border-[rgba(203,199,182,0.3)]">
             <h2 class="font-heading font-bold text-lg text-textmain">Edit Workspace</h2>
             <button onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
                     class="w-8 h-8 rounded-lg flex items-center justify-center
@@ -973,34 +993,42 @@
             </button>
         </div>
 
-        <form id="edit-workspace-form" method="POST" class="space-y-4">
+        {{-- 3. Form: Jadikan area scrollable (flex-1 overflow-y-auto) --}}
+        <form id="edit-workspace-form" method="POST" class="flex-1 overflow-y-auto p-6 pt-4 flex flex-col">
             @csrf
             @method('PATCH')
-            <div>
+            
+            {{-- Input: Nama Workspace (Lebih langsing dengan py-2) --}}
+            <div class="mb-3">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Nama Workspace</label>
                 <input type="text" name="name" id="edit-ws-name" required
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div>
+            
+            {{-- Input: Deskripsi (Lebih langsing dengan py-2) --}}
+            <div class="mb-3">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Deskripsi</label>
                 <input type="text" name="description" id="edit-ws-desc"
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             </div>
-            <div>
+            
+            {{-- Input: Cover Image (Unsplash) --}}
+            <div class="mb-2 flex-1">
                 <label class="block text-sm font-semibold text-textsoft mb-1.5">Cover Image</label>
                 <input type="url" name="cover_image" id="edit-ws-cover"
-                    class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white
+                    class="w-full border border-border rounded-xl px-4 py-2 text-sm bg-white
                            text-textmain focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all mb-2">
-                {{-- Unsplash search inline --}}
+                
+                {{-- Unsplash search inline (Lebih langsing) --}}
                 <div class="flex gap-2">
                     <input type="text" id="unsplash-query-edit" placeholder="Cari foto..."
-                        class="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-white
+                        class="flex-1 border border-border rounded-xl px-4 py-2 text-sm bg-white
                                text-textmain placeholder:text-texthint
                                focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
                     <button type="button" onclick="searchUnsplashEdit()"
-                        class="px-3 py-2 rounded-xl text-sm font-semibold text-white
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white
                                bg-primary hover:bg-primary-dark
                                shadow-[3px_3px_0px_#6a1452]
                                active:translate-y-px active:shadow-[1px_1px_0_#6a1452]
@@ -1017,7 +1045,9 @@
                     <img id="edit-cover-preview-img" src="" alt="" class="w-full h-full object-cover">
                 </div>
             </div>
-            <div class="flex gap-3 pt-1">
+            
+            {{-- 4. Footer Buttons: Dipepetin ke bawah (mt-auto) --}}
+            <div class="flex gap-3 mt-auto pt-3">
                 <button type="button"
                     onclick="document.getElementById('modal-edit-workspace').classList.add('hidden')"
                     class="flex-1 py-2.5 rounded-xl text-sm font-semibold

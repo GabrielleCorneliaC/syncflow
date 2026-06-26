@@ -64,36 +64,20 @@ class PersonalTaskController extends Controller
         return redirect()->route('personal.index')->with('success', 'Task berhasil dihapus.');
     }
 
-    public function updateStatus(Request $request, PersonalTask $task)
+    public function updateStatus(Request $request, $id)
     {
-        $this->authorizeTask($task);
-
-        $validated = $request->validate([
-            'completed' => ['required', 'boolean'],
+        $task = \App\Models\PersonalTask::findOrFail($id);
+        
+        // Logika sinkronisasi seperti di workspace
+        $isDone = $request->status; // true jika dicentang
+        
+        $task->update([
+            'is_completed' => $isDone,
+            'progress' => $isDone ? 100 : 0, // Otomatis 100% jika selesai
+            'status' => $isDone ? 'done' : 'todo' // Sesuaikan status
         ]);
 
-        if ($validated['completed']) {
-            $task->update([
-                'status' => 'completed',
-                'progress_before_completed' => $task->status === 'completed'
-                    ? ($task->progress_before_completed ?? 0)
-                    : $task->progress,
-                'progress' => 100,
-            ]);
-        } else {
-            $task->update([
-                'status' => 'pending',
-                'progress' => $task->progress_before_completed ?? 0,
-                'progress_before_completed' => null,
-            ]);
-        }
-
-        return response()->json([
-            'id' => $task->id,
-            'status' => $task->status,
-            'progress' => $task->progress,
-            'message' => 'Status task berhasil diperbarui.',
-        ]);
+        return response()->json(['success' => true]);
     }
 
     private function authorizeTask(PersonalTask $task): void

@@ -220,43 +220,53 @@
     </div>
 
     {{-- ===================== MODAL: CREATE WORKSPACE ===================== --}}
-    <div id="modal-create" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    {{-- 1. Gege ubah items-end sm:items-center jadi items-center saja biar selalu di tengah --}}
+    <div id="modal-create" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div onclick="closeCreateModal()" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10 border border-border">
-            <div class="flex items-center justify-between mb-5">
+        
+        {{-- 2. Box Putih: Gege tambahkan flex flex-col dan max-h-[90vh] biar tingginya terukur --}}
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 border border-border flex flex-col max-h-[90vh]">
+            
+            {{-- Header: Gege pisahkan dan kasih flex-shrink-0 biar dia tetap nangkring di atas --}}
+            <div class="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b border-gray-100">
                 <h2 class="font-heading font-bold text-xl text-textmain">Buat Workspace Baru</h2>
                 <button onclick="closeCreateModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-textsoft">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <form action="{{ route('workspaces.store') }}" method="POST">
+            {{-- 3. Form: Gege jadikan area scrollable (flex-1 overflow-y-auto) --}}
+            <form action="{{ route('workspaces.store') }}" method="POST" class="flex-1 overflow-y-auto p-6 pt-4 flex flex-col">
                 @csrf
                 @if ($errors->any())
-                    <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
+                    <div class="mb-3 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
                         @foreach ($errors->all() as $error)
                             <p>• {{ $error }}</p>
                         @endforeach
                     </div>
                 @endif
 
-                <div class="mb-4">
+                {{-- Input 1: Gege ubah py-2.5 jadi py-2 dan mb-4 jadi mb-3 biar lebih langsing --}}
+                <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Nama Workspace</label>
                     <input type="text" name="name" required placeholder="e.g. Kepanitiaan BEM 2026"
-                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                        class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                <div class="mb-4">
+                {{-- Input 2: Sama, py-2 dan mb-3 --}}
+                <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Deskripsi Singkat</label>
                     <input type="text" name="description" placeholder="Deskripsi singkat workspace (opsional)"
-                        class="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                        class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                <div class="mb-5">
+                {{-- Input 3 (Unsplash) --}}
+                <div class="mb-2 flex-1">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Foto Cover (Opsional)</label>
                     <div class="flex gap-2 mb-2">
+                        {{-- Kotak pencarian juga dibikin langsing py-2 --}}
                         <input type="text" id="unsplash-query" placeholder="Cari foto (e.g. teamwork, nature...)"
-                            class="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
+                            class="flex-1 border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                         <button type="button" onclick="searchUnsplash()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors">Cari</button>
                     </div>
                     <div id="unsplash-results" class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto hidden"></div>
@@ -269,16 +279,18 @@
                     </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeCreateModal()" class="flex-1 py-2.5 bg-muted text-textsoft font-semibold rounded-xl border border-border hover:bg-gray-100 transition-colors">Batal</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">Buat Workspace</button>
+                {{-- 4. Footer: Gege kasih mt-auto biar tombolnya selalu terdorong ke paling bawah --}}
+                <div class="flex gap-3 mt-auto pt-3">
+                    <button type="button" onclick="closeCreateModal()" class="flex-1 py-2 bg-muted text-textsoft font-semibold rounded-xl border border-border hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="flex-1 py-2 bg-primary text-white font-semibold rounded-xl shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">Buat Workspace</button>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- ===================== MODAL: INVITE MEMBER ===================== --}}
-    <div id="modal-invite" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+    <div id="modal-invite" 
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div onclick="closeInviteModal()" class="absolute inset-0"></div>
         <div class="w-full max-w-md p-8 bg-white border border-border shadow-2xl rounded-3xl relative z-10">
             <h2 class="text-2xl font-heading font-bold text-center text-textmain mb-6">Undang Anggota via Email</h2>

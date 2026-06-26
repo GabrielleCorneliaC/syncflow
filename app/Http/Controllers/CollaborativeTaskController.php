@@ -15,10 +15,18 @@ class CollaborativeTaskController extends Controller
 {
     public function show(Workspace $workspace, CollaborativeTask $task)
     {
-        abort_unless($task->workspace_id === $workspace->id, 404);
-        return back();
+       // Validasi: pastikan task ini benar-benar milik workspace yang sedang dibuka
+    abort_unless($task->workspace_id === $workspace->id, 404);
+
+    // Eager load data relasi (misal: memanggil relasi komentar dan user yang komen)
+    // Supaya di file blade nanti tinggal di-looping
+    $task->load('comments.user'); 
+
+    // Buka view show.blade.php dan kirimkan data workspace & task ke sana
+    return view('tasks.show', compact('workspace', 'task'));
     }
 
+    
     public function store(Request $request, Workspace $workspace, GoogleCalendarService $googleCalendar)
     {
         $validated = $request->validate([

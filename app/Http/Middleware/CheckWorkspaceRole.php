@@ -11,24 +11,27 @@ class CheckWorkspaceRole
 {
     public function handle(Request $request, Closure $next, $role = null): Response
     {
-        // 1. Ambil ID Workspace dari URL secara aman
-        $workspace = $request->route('workspace');
+        // 1. Ambil ID Workspace dari Route ATAU dari Query Parameter (?workspace=2)
+        $workspace = $request->route('workspace') ?? $request->input('workspace');
         $workspaceId = $workspace instanceof \App\Models\Workspace ? $workspace->id : $workspace;
 
-        // Jika mengakses lewat Task / Schedule (AJAX status checkbox)
-        if (!$workspaceId && $request->route('task')) {
-            $taskParam = $request->route('task');
+        // Jika mengakses lewat Task / Schedule (AJAX status checkbox / komentar)
+        if (!$workspaceId) {
+            // Ambil ID task dari Route ATAU dari Query Parameter (?task=2)
+            $taskParam = $request->route('task') ?? $request->input('task');
             
-            if ($taskParam instanceof \App\Models\CollaborativeTask) {
-                $workspaceId = $taskParam->workspace_id;
-            } else {
-                $workspaceId = DB::table('collaborative_schedules')
-                    ->where('id', $taskParam)
-                    ->value('workspace_id') 
-                    ?? 
-                    DB::table('collaborative_tasks')
-                    ->where('id', $taskParam)
-                    ->value('workspace_id');
+            if ($taskParam) {
+                if ($taskParam instanceof \App\Models\CollaborativeTask) {
+                    $workspaceId = $taskParam->workspace_id;
+                } else {
+                    $workspaceId = DB::table('collaborative_schedules')
+                        ->where('id', $taskParam)
+                        ->value('workspace_id') 
+                        ?? 
+                        DB::table('collaborative_tasks')
+                        ->where('id', $taskParam)
+                        ->value('workspace_id');
+                }
             }
         }
 

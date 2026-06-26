@@ -6,70 +6,90 @@
     'task' => null,
 ])
 
-<div id="{{ $id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div onclick="closeModal('{{ $id }}')" class="absolute inset-0" style="background:rgba(0,0,0,0.4);"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
-        <div class="flex items-center justify-between mb-5">
-            <h2 class="font-display font-bold text-lg" style="color:#1A1A2E;">{{ $title }}</h2>
-            <button type="button" onclick="closeModal('{{ $id }}')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-400">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+{{-- 1. Outer Wrapper (Backdrop latar hitam) --}}
+{{-- Kita ubah items-end sm:items-center menjadi items-center agar selalu presisi di tengah monitor --}}
+<div id="{{ $id }}" 
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    
+    <div onclick="closeModal('{{ $id }}')" class="absolute inset-0"></div>
+
+    {{-- 2. Box Modal Putih --}}
+    {{-- KUNCI UTAMA: Tambahkan flex flex-col dan max-h-[90vh] --}}
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]">
+        
+        {{-- Modal Header (Tetap diam di atas, dikunci pakai flex-shrink-0) --}}
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-5 border-b border-[rgba(203,199,182,0.3)]">
+            <h3 class="font-poppins font-semibold text-[#1d1c17] text-lg">{{ $title }}</h3>
+            <button type="button" onclick="closeModal('{{ $id }}')" class="text-[#9b9887] hover:text-[#49473a] transition">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/>
+                </svg>
             </button>
         </div>
 
-        <form action="{{ $action }}" method="POST" class="space-y-4">
+        {{-- 3. Form Body --}}
+        {{-- KUNCI KEDUA: Kita buat tag <form> langsung menjadi wadah scrollable (flex-1 overflow-y-auto) --}}
+        <form action="{{ $action }}" method="POST" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
             @csrf
             @if($method !== 'POST')
                 @method($method)
             @endif
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Task Name</label>
-                <input type="text" name="title" required value="{{ old('title', $task?->title) }}"
-                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-                <textarea name="description" rows="3"
-                          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100 resize-none">{{ old('description', $task?->description) }}</textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deadline</label>
-                    <input type="date" name="due_date" value="{{ old('deadline',$task?->due_date) }}"
-                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                <div class="flex flex-col gap-1">
+                    <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Nama Tugas *</label>
+                    <input type="text" name="title" required value="{{ old('title', $task?->title) }}"
+                           class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Prioritas</label>
-                    <select name="priority" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
-                        <option value="low" @selected(old('priority', $task?->priority ?? 'medium') === 'low')>Low</option>
-                        <option value="medium" @selected(old('priority', $task?->priority ?? 'medium') === 'medium')>Medium</option>
-                        <option value="high" @selected(old('priority', $task?->priority ?? 'medium') === 'high')>High</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Progress (%)</label>
-                    <input type="number" name="progress" min="0" max="100" value="{{ old('progress', $task?->progress ?? 0) }}"
-                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                <div class="flex flex-col gap-1">
+                    <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Deskripsi</label>
+                    <textarea name="description" rows="3"
+                              class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition resize-none">{{ old('description', $task?->description) }}</textarea>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
-                    <select name="status" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink-400 bg-white">
-                        <option value="todo" @selected(old('status', $task?->status ?? 'todo') === 'todo')>To Do</option>
-                        <option value="in_progress" @selected(old('status', $task?->status ?? 'todo') === 'in_progress')>In Progress</option>
-                        <option value="done" @selected(old('status', $task?->status ?? 'todo') === 'done')>Done</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="flex gap-3 pt-1">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Deadline</label>
+                        <input type="date" name="due_date" value="{{ old('due_date', $task?->due_date?->format('Y-m-d')) }}"
+                               class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Prioritas</label>
+                        <select name="priority" class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition">
+                            <option value="low" @selected(old('priority', $task?->priority) === 'low')>Low</option>
+                            <option value="medium" @selected(old('priority', $task?->priority ?? 'medium') === 'medium')>Medium</option>
+                            <option value="high" @selected(old('priority', $task?->priority) === 'high')>High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Progress (%)</label>
+                        <input type="number" name="progress" min="0" max="100" value="{{ old('progress', $task?->progress ?? 0) }}"
+                               class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-inter font-semibold text-[#49473a] text-xs uppercase tracking-[0.6px]">Status</label>
+                        <select name="status" class="bg-[#fdf9f0] border border-[#cbc7b6] rounded-lg px-4 py-3 font-inter text-[#1d1c17] text-sm focus:outline-none focus:border-[#b30084] transition">
+                            <option value="todo" @selected(old('status', $task?->status) === 'todo')>To Do</option>
+                            <option value="in_progress" @selected(old('status', $task?->status) === 'in_progress')>In Progress</option>
+                            <option value="done" @selected(old('status', $task?->status) === 'done')>Done</option>
+                        </select>
+                    </div>
+                </div>
+
+            {{-- 4. Tombol Footer di Paling Bawah Form --}}
+            {{-- Tambahkan mt-auto agar tombol otomatis menempel manis di batas bawah form --}}
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-50 mt-auto">
                 <button type="button" onclick="closeModal('{{ $id }}')"
-                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style="background:#b30084;">Save</button>
+                        class="font-poppins font-medium text-[#49473a] text-sm px-6 py-[10px] rounded-lg hover:bg-gray-100 transition">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="bg-[#b30084] hover:bg-[#8c0067] shadow-[4px_4px_0px_#6a1452] rounded-lg px-6 py-[10px] font-poppins font-medium text-white text-sm transition active:translate-y-px active:shadow-[2px_2px_0_#6a1452]">
+                    Simpan
+                </button>
             </div>
         </form>
     </div>
