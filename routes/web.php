@@ -15,12 +15,7 @@ use App\Http\Controllers\CollaborativeScheduleController;
 use App\Http\Controllers\ResourceLinkController;
 use App\Http\Controllers\TaskCommentController;
 
-/*
-|--------------------------------------------------------------------------
-| Guest Routes
-|--------------------------------------------------------------------------
-| Hanya dapat diakses ketika user belum login.
-*/
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -31,19 +26,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-    // Route untuk menampilkan halaman forgot password
-Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-
-// Route untuk langsung mereset password tanpa email
-Route::post('/forgot-password', [AuthController::class, 'resetPasswordDirect'])->name('password.update.direct');
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'resetPasswordDirect'])->name('password.update.direct');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
-|--------------------------------------------------------------------------
-| Semua route di bawah wajib login.
-*/
+
 Route::middleware('auth')->group(function () {
 
     // Dev bypass login: akses langsung sebagai user ID 1

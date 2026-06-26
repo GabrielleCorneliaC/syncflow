@@ -28,23 +28,17 @@
     </div>
 @endif
 
-    {{-- ══════════════════════════════════════════
-         HERO HEADER dengan cover image
-         Tinggi dikurangi agar proporsional di dalam
-         main content yang sudah punya padding dari layouts.app
-    ══════════════════════════════════════════ --}}
+
     <div class="relative overflow-visible rounded-2xl border border-border
                 shadow-[3px_3px_0px_#cbc7b6] mb-6"
          style="height: 156px;">
 
-        {{-- Cover image / fallback gradient brand — Tambahkan rounded-2xl di sini --}}
         @if($workspace->cover_image)
             <img src="{{ $workspace->cover_image }}" alt="{{ $workspace->name }}"
                  class="w-full h-full object-cover rounded-2xl">
         @else
             <div class="w-full h-full bg-gradient-to-br from-accent to-primary rounded-2xl"></div>
         @endif
-        {{-- Tambahkan juga rounded-2xl di overlay hitamnya --}}
         <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent rounded-2xl"></div>
 
         {{-- Back + Title --}}
@@ -95,25 +89,25 @@
                 <div x-show="openHeader" style="display: none;" x-transition
                     class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-xl shadow-lg py-1 z-[9999]">
                     
-                    {{-- Tombol Google Calendar (Tambah active:bg-gray-200) --}}
+                    {{-- Tombol Google Calendar --}}
                     <a href="{{ route('google.calendar.redirect') }}" 
                     class="block w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 transition-colors duration-200">
                         {{ auth()->user()->hasGoogleCalendarConnected() ? 'Google Connected' : 'Connect Google' }}
                     </a>
 
-                    {{-- Tombol Invite (Tambah active:bg-[#ffdbed] biar pas ditekan pinknya lebih nyata) --}}
+                    {{-- Tombol Invite --}}
                     <button onclick="openInviteModal({{ $workspace->id }})" 
                             class="w-full text-left px-4 py-2.5 text-sm font-semibold text-primary hover:bg-[#FFF0F6] hover:text-[#a6007a] active:bg-[#ffdbed] transition-colors duration-200">
                         Invite
                     </button>
 
-                    {{-- Tombol Edit Workspace (Tambah active:bg-gray-200) --}}
+                    {{-- Tombol Edit Workspace --}}
                     <button onclick="openEditWorkspaceModal()" 
                             class="w-full text-left px-4 py-2.5 text-sm font-semibold text-textmain hover:bg-gray-100 hover:text-black active:bg-gray-200 transition-colors duration-200">
                         Edit Workspace
                     </button>
 
-                    {{-- Tombol Delete Workspace (Tambah active:bg-red-100) --}}
+                    {{-- Tombol Delete Workspace --}}
                     <button onclick="openModal('modal-delete-workspace')" 
                             class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100 transition-colors duration-200">
                         Delete Workspace
@@ -124,11 +118,6 @@
         @endif
     </div>
 
-    {{-- ══════════════════════════════════════════
-         TABS
-         Menggunakan border-b dengan warna primary
-         brand (#b30084) sesuai layouts.app
-    ══════════════════════════════════════════ --}}
     <div class="border-b border-border mb-6">
         <div class="flex gap-1 overflow-x-auto whitespace-nowrap pb-1">
 
@@ -254,7 +243,7 @@
                             </span>
                         </td>
 
-                        {{-- 3. Detail Konten Tugas (Nama, Tanggal, dan Assignee sejajar) --}}
+                        {{-- 3. Detail Konten Tugas --}}
                         <td class="px-4 py-4 text-left">
                             <p class="font-bold text-textmain mb-1.5 text-base">{{ $task->name }}</p>
                             
@@ -357,7 +346,7 @@
             
             @foreach($workspace->collaborativeTasks as $task)
                 @if(!empty($isOwner))
-            {{-- MODAL HAPUS TUGAS (Khusus untuk baris ini) --}}
+            {{-- MODAL HAPUS TUGAS --}}
             <x-delete-confirm-modal
                 id="modal-delete-collab-task-{{ $task->id }}"
                 title="Hapus Tugas?"
@@ -365,7 +354,7 @@
                 action="{{ route('workspaces.tasks.destroy', ['workspace' => $workspace->id, 'task' => $task->id]) }}"
             />
 
-            {{-- MODAL EDIT TUGAS (Khusus untuk baris ini) --}}
+            {{-- MODAL EDIT TUGAS --}}
             <div id="modal-edit-collab-task-{{ $task->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
                 <div onclick="closeModal('modal-edit-collab-task-{{ $task->id }}')" class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
                     <div class="relative bg-surface rounded-2xl border border-border shadow-[6px_6px_0px_#cbc7b6] w-full max-w-md p-6 z-10">
@@ -400,10 +389,10 @@
                                     <select name="assignee_id" class="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-white text-textmain focus:border-primary transition-all">
                                         <option value="">— Pilih —</option>
                                         @foreach($workspace->members as $member)
-    <option value="{{ $member->id }}" {{ $task->assignees->contains('id', $member->id) ? 'selected' : '' }}>
-        {{ $member->name }}
-    </option>
-@endforeach
+                                            <option value="{{ $member->id }}" {{ $task->assignees->contains('id', $member->id) ? 'selected' : '' }}>
+                                                {{ $member->name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -494,7 +483,7 @@
                             </span>
 
                             @if(!empty($isOwner))
-                            {{-- Tombol Aksi Titik Tiga (Tanpa kolom baru) --}}
+                            {{-- Tombol Aksi Titik Tiga --}}
                             <div class="relative flex-shrink-0" x-data="{ open: false }">
                                 <button @click="open = !open"
                                         class="w-7 h-7 flex items-center justify-center rounded-lg text-texthint hover:text-textmain hover:bg-muted transition-colors">
@@ -619,7 +608,7 @@
     ══════════════════════════════════════════ --}}
     <div id="panel-resource" class="hidden">
 
-        {{-- Toolbar (Add Resource Button di kiri sesuai desain) --}}
+        {{-- Toolbar --}}
         <div class="mb-6 flex items-center justify-between">
             @if(!empty($isOwner))
             <button onclick="openAddResourceModal()"
@@ -632,7 +621,7 @@
                 Add New Resource
             </button>
             @else
-            <div></div> {{-- Spacer kalau guest --}}
+            <div></div>
             @endif
         </div>
 

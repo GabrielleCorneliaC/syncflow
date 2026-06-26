@@ -13,7 +13,7 @@
             border-b border-[rgba(203,199,182,0.3)] pb-[13px]
             mb-6">
 
-    {{-- Judul: Montserrat ExtraBold 48px #1d1c17 --}}
+    {{-- Judul --}}
     <h1 class="font-montserrat font-extrabold text-[#1d1c17] tracking-[-0.02em]
                text-3xl sm:text-4xl lg:text-5xl leading-tight">
         Project Workspaces
@@ -37,77 +37,65 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 pt-8">
 
             @forelse($myWorkspaces ?? [] as $ws)
-            <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
-                <div class="relative">
-                    
-                    {{-- Tab Atas Folder (Selalu Pink untuk Owner) --}}
-                    {{-- Jika tidak ada cover_image, gunakan border lebih gelap (#5c5c5c) agar sesuai desain --}}
-                    <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#f4a3a4] z-20 flex items-center px-3">
-                        <span class="text-[10px] font-bold text-[#2a2a2a] flex items-center gap-1.5">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                            OWNER
-                        </span>
-                    </div>
+                <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
+                    <div class="relative">
+                        
+                        {{-- TAB ATAS FOLDER --}}
+                        <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#f4a3a4] z-20 flex items-center px-3">
+                            <span class="text-[10px] font-bold text-[#2a2a2a] flex items-center gap-1.5">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                OWNER
+                            </span>
+                        </div>
 
-                    @if($ws->cover_image)
-                        {{-- STYLE 1: DENGAN GAMBAR (Overlay Gelap, Teks Putih) --}}
-                        <div class="relative z-10 w-full h-[180px] border border-[#cbc7b6] rounded-b-xl rounded-tr-xl overflow-hidden shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all bg-muted">
-                            <div class="absolute inset-0">
-                                <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);"></div>
-                            </div>
+                        {{-- CONTAINER UTAMA --}}
+                        <div class="relative z-10 w-full h-[180px] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl 
+                                    shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] 
+                                    transition-all overflow-hidden flex flex-col justify-between p-4 
+                                    {{ $ws->cover_image ? 'bg-muted' : 'bg-[#f4a3a4]' }}">
 
-                            <div class="relative z-30 p-4 h-full flex flex-col justify-between">
-                               
+                            {{-- LAYER GAMBAR--}}
+                            @if($ws->cover_image)
+                                <div class="absolute inset-0 z-0">
+                                    <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-black/50"></div>
+                                </div>
+                            @endif
+
+                            <div class="absolute top-0 left-[1px] h-[2px] w-[108px] {{ $ws->cover_image ? 'bg-muted' : 'bg-[#f4a3a4]' }} -translate-y-[1px] z-20"></div>
+
+                            {{-- KONTEN (Teks & Avatar) --}}
+                            <div class="relative z-30 flex flex-col justify-between h-full">
                                 <div>
-                                    <p class="text-white font-bold text-lg leading-tight mb-1 line-clamp-1">{{ $ws->name }}</p>
+                                    <h3 class="font-semibold text-lg leading-tight line-clamp-2 {{ $ws->cover_image ? 'text-white' : 'text-[#2a2a2a]' }}">
+                                        {{ $ws->name }}
+                                    </h3>
                                     @if($ws->description)
-                                    <p class="text-xs text-white/80 line-clamp-1 mb-3">{{ $ws->description }}</p>
+                                        <p class="text-xs line-clamp-1 mt-1 {{ $ws->cover_image ? 'text-white/80' : 'text-[#4a4a4a]/80' }}">
+                                            {{ $ws->description }}
+                                        </p>
                                     @endif
-                                    
-                                    <div class="flex items-center -space-x-1.5">
-                                        @foreach($ws->members->take(3) as $member)
-                                            <img src="{{ $member->profile_picture 
-                                                ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
-                                                class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
-                                                title="{{ $member->name }}">
-                                        @endforeach
-                                    </div>
+                                </div>
+
+                                <div class="flex -space-x-1.5">
+                                    @foreach($ws->members->take(3) as $member)
+                                        <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
+                                            class="w-7 h-7 rounded-full border-2 {{ $ws->cover_image ? 'border-white' : 'border-[#5c5c5c]' }} object-cover"
+                                            title="{{ $member->name }}">
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
-                    @else
-                        {{-- STYLE 2: TANPA GAMBAR (Folder Pink Solid sesuai desain image_c15ae2.png) --}}
-                        <div class="relative z-10 w-full h-[180px] bg-[#f4a3a4] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
-                            {{-- Trik CSS menutupi border bawah tab --}}
-                            <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#f4a3a4] -translate-y-[1px] z-20"></div>
-
-                            
-
-                            <div class="relative z-30">
-                                <h3 class="font-semibold text-lg text-[#2a2a2a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
-                            </div>
-
-                            <div class="flex -space-x-1.5 relative z-30">
-                                @foreach($ws->members->take(3) as $member)
-                                    <img src="{{ $member->profile_picture 
-                                        ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
-                                        class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
-                                        title="{{ $member->name }}">
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </a>
-            @empty
+                    </div>
+                </a>
+                @empty
             <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
                 <h3 class="font-heading font-semibold text-textmain mb-1">Belum Ada Workspace</h3>
                 <p class="text-sm text-textsoft mb-4">Buat workspace pertama kamu untuk mulai kolaborasi.</p>
             </div>
             @endforelse
 
-            {{-- CREATE WORKSPACE FOLDER CARD (DASHED) --}}
+            {{-- CREATE WORKSPACE FOLDER CARD --}}
             <button onclick="openCreateModal()" class="block w-full text-left group hover:scale-[1.02] transition-transform duration-200">
                 <div class="relative">
                     <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r border-dashed border-[#8c8c8c] rounded-t-xl bg-[#f5f4ef] z-20"></div>
@@ -138,7 +126,6 @@
         <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
             <div class="relative">
                 
-                {{-- Tab Atas Folder — tampilkan ADMIN / COLLABORATOR --}}
                 <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#e6e4df] z-20 flex items-center px-3">
                     <span class="text-[10px] font-bold text-[#4a4a4a] flex items-center gap-1.5">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
@@ -157,7 +144,6 @@
                             <p class="text-white font-bold text-lg leading-tight mb-3 line-clamp-2">{{ $ws->name }}</p>
                             <div class="flex items-center -space-x-1.5">
                                 @foreach($ws->members->take(3) as $member)
-                                {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
                                 <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}"
                                     class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
                                     title="{{ $member->name }}">
@@ -173,27 +159,21 @@
                     <div class="relative z-10 w-full h-[180px] bg-[#e6e4df] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
                         <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#e6e4df] -translate-y-[1px] z-20"></div>
 
-                        <div class="flex items-start justify-between relative z-30">
-                            {{-- ✅ Fix: label role dinamis --}}
-                            <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/30 text-[10px] font-bold text-[#4a4a4a]">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                {{ $roleLabel }}
-                            </div>
-                            <div class="text-[#6a6a6a]">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                            </div>
-                        </div>
-
                         <div class="relative z-30">
-                            <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
+                            {{-- Judul --}}
+                            <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-1">{{ $ws->name }}</h3>
+                            
+                            {{-- TAMBAHKAN INI: Deskripsi --}}
+                            @if($ws->description)
+                                <p class="text-xs text-[#6a6a6a] line-clamp-2 mt-1">{{ $ws->description }}</p>
+                            @endif
                         </div>
 
                         <div class="flex -space-x-1.5 relative z-30">
                             @foreach($ws->members->take(3) as $member)
-                            {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
                             <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=random' }}"
-                                class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover"
-                                title="{{ $member->name }}">
+                                    class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover"
+                                    title="{{ $member->name }}">
                             @endforeach
                             @if($ws->members->count() > 3)
                             <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#e6e4df] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
@@ -215,14 +195,11 @@
 </div>
 
     {{-- ===================== MODAL: CREATE WORKSPACE ===================== --}}
-    {{-- 1. Gege ubah items-end sm:items-center jadi items-center saja biar selalu di tengah --}}
     <div id="modal-create" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div onclick="closeCreateModal()" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
         
-        {{-- 2. Box Putih: Gege tambahkan flex flex-col dan max-h-[90vh] biar tingginya terukur --}}
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 border border-border flex flex-col max-h-[90vh]">
             
-            {{-- Header: Gege pisahkan dan kasih flex-shrink-0 biar dia tetap nangkring di atas --}}
             <div class="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b border-gray-100">
                 <h2 class="font-heading font-bold text-xl text-textmain">Buat Workspace Baru</h2>
                 <button onclick="closeCreateModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-textsoft">
@@ -230,7 +207,6 @@
                 </button>
             </div>
 
-            {{-- 3. Form: Gege jadikan area scrollable (flex-1 overflow-y-auto) --}}
             <form action="{{ route('workspaces.store') }}" method="POST" class="flex-1 overflow-y-auto p-6 pt-4 flex flex-col">
                 @csrf
                 @if ($errors->any())
@@ -241,25 +217,21 @@
                     </div>
                 @endif
 
-                {{-- Input 1: Gege ubah py-2.5 jadi py-2 dan mb-4 jadi mb-3 biar lebih langsing --}}
                 <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Nama Workspace</label>
                     <input type="text" name="name" required placeholder="e.g. Kepanitiaan BEM 2026"
                         class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                {{-- Input 2: Sama, py-2 dan mb-3 --}}
                 <div class="mb-3">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Deskripsi Singkat</label>
                     <input type="text" name="description" placeholder="Deskripsi singkat workspace (opsional)"
                         class="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                 </div>
 
-                {{-- Input 3 (Unsplash) --}}
                 <div class="mb-2 flex-1">
                     <label class="block text-sm font-semibold text-textmain mb-1.5">Foto Cover (Opsional)</label>
                     <div class="flex gap-2 mb-2">
-                        {{-- Kotak pencarian juga dibikin langsing py-2 --}}
                         <input type="text" id="unsplash-query" placeholder="Cari foto (e.g. teamwork, nature...)"
                             class="flex-1 border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface">
                         <button type="button" onclick="searchUnsplash()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors">Cari</button>
@@ -274,7 +246,6 @@
                     </div>
                 </div>
 
-                {{-- 4. Footer: Gege kasih mt-auto biar tombolnya selalu terdorong ke paling bawah --}}
                 <div class="flex gap-3 mt-auto pt-3">
                     <button type="button" onclick="closeCreateModal()" class="flex-1 py-2 bg-muted text-textsoft font-semibold rounded-xl border border-border hover:bg-gray-100 transition-colors">Batal</button>
                     <button type="submit" class="flex-1 py-2 bg-primary text-white font-semibold rounded-xl shadow-[3px_3px_0px_#6a1452] active:translate-y-px active:shadow-[1px_1px_0_#6a1452] transition-all">Buat Workspace</button>
@@ -309,6 +280,14 @@
 
 @push('scripts')
 <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const modalCreate = document.getElementById('modal-create');
+        const modalInvite = document.getElementById('modal-invite');
+        
+        if(modalCreate) document.body.appendChild(modalCreate);
+        if(modalInvite) document.body.appendChild(modalInvite);
+    });
+
     function switchTab(tab) {
         const panels = { mine: document.getElementById('panel-mine'), shared: document.getElementById('panel-shared') };
         const tabs   = { mine: document.getElementById('tab-mine'),   shared: document.getElementById('tab-shared') };
