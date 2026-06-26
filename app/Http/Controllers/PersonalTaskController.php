@@ -26,11 +26,11 @@ class PersonalTaskController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['nullable', 'date'],
-            'status' => ['required', 'in:pending,in_progress,completed'],
-            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+        'title' => ['required', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'due_date' => ['nullable', 'date'],
+        'status' => ['required', 'in:todo,in_progress,done'],
+        'progress' => ['required', 'integer', 'min:0', 'max:100'],
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -44,11 +44,11 @@ class PersonalTaskController extends Controller
         $this->authorizeTask($task);
 
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['nullable', 'date'],
-            'status' => ['required', 'in:pending,in_progress,completed'],
-            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+        'title' => ['required', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'due_date' => ['nullable', 'date'],
+        'status' => ['required', 'in:pending,in_progress,completed'],
+        'progress' => ['required', 'integer', 'min:0', 'max:100'],
         ]);
 
         $task->update($validated);
@@ -65,19 +65,30 @@ class PersonalTaskController extends Controller
     }
 
     public function updateStatus(Request $request, $id)
-    {
-        $task = \App\Models\PersonalTask::findOrFail($id);
-        
-        $isDone = $request->status; 
-        
-        $task->update([
-            'is_completed' => $isDone,
-            'progress' => $isDone ? 100 : 0, 
-            'status' => $isDone ? 'done' : 'todo' 
-        ]);
+{
+    $request->validate([
+        'status' => ['required', 'in:todo,in_progress,done'],
+        'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
+    ]);
 
-        return response()->json(['success' => true]);
-    }
+    $task = PersonalTask::findOrFail($id);
+
+    $progress = match ($request->status) {
+        'todo' => 0,
+        'done' => 100,
+        'in_progress' => $request->progress,
+    };
+
+    $task->update([
+        'status' => $request->status,
+        'progress' => $progress,
+    ]);
+
+    return response()->json([
+        'success' => true,
+    ]);
+}
+
 
     private function authorizeTask(PersonalTask $task): void
     {
