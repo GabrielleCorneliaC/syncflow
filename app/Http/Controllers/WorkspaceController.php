@@ -72,17 +72,17 @@ public function show(Workspace $workspace)
 public function index()
 {
     $all = Workspace::whereHas('members', function ($query) {
-        $query->where('user_id', auth()->id()); // ✅ ini tetap pakai user_id (query ke tabel pivot)
+        $query->where('user_id', auth()->id());
     })->with('members')->get();
 
     $myWorkspaces = $all->filter(function ($w) {
-        $member = $w->members->firstWhere('id', auth()->id()); // ✅ ganti user_id → id
-        return $member && $member->pivot->role === 'admin';    // ✅ pivot->role
+        $member = $w->members->firstWhere('id', auth()->id());
+        return $member && $member->pivot->role === 'admin';
     })->values();
 
     $sharedWorkspaces = $all->reject(function ($w) {
-        $member = $w->members->firstWhere('id', auth()->id()); // ✅ ganti user_id → id
-        return $member && $member->pivot->role === 'admin';    // ✅ pivot->role
+        $member = $w->members->firstWhere('id', auth()->id());
+        return $member && $member->pivot->role === 'admin';
     })->values();
 
     return view('workspaces.index', compact('myWorkspaces', 'sharedWorkspaces'));
@@ -150,7 +150,7 @@ public function index()
         // 3. Proses Pengiriman Email (Sesuai kodingan aslimu)
         try {
             // MATIKAN SEMENTARA BARIS INI SAMPAI TEMANMU MEMBUAT FILE-NYA
-            // Mail::to($email)->send(new \App\Mail\WorkspaceInviteMail($workspace, $email));
+            Mail::to($email)->send(new \App\Mail\WorkspaceInviteMail($workspace, $email));
             
             // Tambahkan log simulasi agar kita tahu sistemnya sebenarnya berjalan
             \Log::info("Simulasi undangan ($role) berhasil dikirim ke: " . $email);

@@ -72,11 +72,11 @@
                                     
                                     <div class="flex items-center -space-x-1.5">
                                         @foreach($ws->members->take(3) as $member)
-                                        <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=b30084&color=fff' }}" class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover">
+                                            <img src="{{ $member->profile_picture 
+                                                ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
+                                                class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                                title="{{ $member->name }}">
                                         @endforeach
-                                        @if($ws->members->count() > 3)
-                                        <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
-                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -88,10 +88,7 @@
                             <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#f4a3a4] -translate-y-[1px] z-20"></div>
 
                             <div class="flex items-start justify-between relative z-30">
-                                <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/20 text-[10px] font-bold text-[#3a3a3a]">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    OWNER
-                                </div>
+                               
                                 <button onclick="event.preventDefault(); openInviteModal({{ $ws->id }})" class="text-[#4a4a4a] hover:text-black transition-colors">
                                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
                                 </button>
@@ -103,13 +100,11 @@
 
                             <div class="flex -space-x-1.5 relative z-30">
                                 @foreach($ws->members->take(3) as $member)
-                                <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=random' }}" class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover">
+                                    <img src="{{ $member->profile_picture 
+                                        ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" 
+                                        class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                        title="{{ $member->name }}">
                                 @endforeach
-                                @if($ws->members->count() > 3)
-                                <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#f4a3a4] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
-                                    +{{ $ws->members->count() - 3 }}
-                                </div>
-                                @endif
                             </div>
                         </div>
                     @endif
@@ -142,82 +137,92 @@
     </div>
 
     {{-- ===================== SHARED WITH ME ===================== --}}
-    <div id="panel-shared" class="hidden">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 pt-8">
-            
-            @forelse($sharedWorkspaces ?? [] as $ws)
-            <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
-                <div class="relative">
-                    
-                    {{-- Tab Atas Folder (Selalu Beige/Abu untuk Shared) --}}
-                    <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#e6e4df] z-20 flex items-center px-3">
-                        <span class="text-[10px] font-bold text-[#4a4a4a] flex items-center gap-1.5">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                            SHARED
-                        </span>
-                    </div>
+<div id="panel-shared" class="hidden">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 pt-8">
+        
+        @forelse($sharedWorkspaces ?? [] as $ws)
+        @php
+            $myMember = $ws->members->firstWhere('id', auth()->id());
+            $roleLabel = $myMember ? strtoupper($myMember->pivot->role) : 'SHARED';
+        @endphp
+        <a href="{{ route('workspaces.show', $ws->id) }}" class="block group hover:-translate-y-1 transition-transform duration-300">
+            <div class="relative">
+                
+                {{-- Tab Atas Folder — tampilkan ADMIN / COLLABORATOR --}}
+                <div class="absolute -top-[27px] left-[-1px] h-7 w-28 border-t border-l border-r {{ $ws->cover_image ? 'border-[#cbc7b6]' : 'border-[#5c5c5c]' }} rounded-t-xl bg-[#e6e4df] z-20 flex items-center px-3">
+                    <span class="text-[10px] font-bold text-[#4a4a4a] flex items-center gap-1.5">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        {{ $roleLabel }}
+                    </span>
+                </div>
 
-                    @if($ws->cover_image)
-                        {{-- STYLE 1: DENGAN GAMBAR --}}
-                        <div class="relative z-10 w-full h-[180px] border border-[#cbc7b6] rounded-b-xl rounded-tr-xl overflow-hidden shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all bg-muted">
-                            <div class="absolute inset-0">
-                                <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);"></div>
-                            </div>
-                            <div class="relative z-30 p-4 h-full flex flex-col justify-end">
-                                <p class="text-white font-bold text-lg leading-tight mb-3 line-clamp-2">{{ $ws->name }}</p>
-                                <div class="flex items-center -space-x-1.5">
-                                    @foreach($ws->members->take(3) as $member)
-                                    <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=49473a&color=fff' }}" class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover">
-                                    @endforeach
-                                    @if($ws->members->count() > 3)
-                                    <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
-                                    @endif
-                                </div>
-                            </div>
+                @if($ws->cover_image)
+                    {{-- STYLE 1: DENGAN GAMBAR --}}
+                    <div class="relative z-10 w-full h-[180px] border border-[#cbc7b6] rounded-b-xl rounded-tr-xl overflow-hidden shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all bg-muted">
+                        <div class="absolute inset-0">
+                            <img src="{{ $ws->cover_image }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);"></div>
                         </div>
-                    @else
-                        {{-- STYLE 2: TANPA GAMBAR (Folder Beige/Abu Solid sesuai desain image_c15ae2.png) --}}
-                        <div class="relative z-10 w-full h-[180px] bg-[#e6e4df] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
-                            <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#e6e4df] -translate-y-[1px] z-20"></div>
-
-                            <div class="flex items-start justify-between relative z-30">
-                                <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/30 text-[10px] font-bold text-[#4a4a4a]">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    SHARED
-                                </div>
-                                {{-- Tombol invite biasanya tidak aktif untuk shared, di sini hanya menampilkan icon --}}
-                                <div class="text-[#6a6a6a]">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                                </div>
-                            </div>
-
-                            <div class="relative z-30">
-                                <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
-                            </div>
-
-                            <div class="flex -space-x-1.5 relative z-30">
+                        <div class="relative z-30 p-4 h-full flex flex-col justify-end">
+                            <p class="text-white font-bold text-lg leading-tight mb-3 line-clamp-2">{{ $ws->name }}</p>
+                            <div class="flex items-center -space-x-1.5">
                                 @foreach($ws->members->take(3) as $member)
-                                <img src="{{ $member->user->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->user->name ?? 'Member').'&size=24&background=random' }}" class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover">
+                                {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
+                                <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=49473a&color=fff' }}"
+                                    class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] object-cover"
+                                    title="{{ $member->name }}">
                                 @endforeach
                                 @if($ws->members->count() > 3)
-                                <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#e6e4df] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
-                                    +{{ $ws->members->count() - 3 }}
-                                </div>
+                                <span class="w-7 h-7 rounded-full border-2 border-[#5c5c5c] flex items-center justify-center text-[10px] font-bold text-white bg-primary">+{{ $ws->members->count() - 3 }}</span>
                                 @endif
                             </div>
                         </div>
-                    @endif
-                </div>
-            </a>
-            @empty
-            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <h3 class="font-heading font-semibold text-textmain mb-1">Belum Ada Data</h3>
-                <p class="text-sm text-textsoft">Belum ada workspace yang dibagikan ke kamu.</p>
+                    </div>
+                @else
+                    {{-- STYLE 2: TANPA GAMBAR --}}
+                    <div class="relative z-10 w-full h-[180px] bg-[#e6e4df] border border-[#5c5c5c] rounded-b-xl rounded-tr-xl shadow-[3px_3px_0px_#cbc7b6] group-hover:shadow-[5px_5px_0px_#a8a493] transition-all flex flex-col justify-between p-4">
+                        <div class="absolute top-0 left-[1px] h-[2px] w-[108px] bg-[#e6e4df] -translate-y-[1px] z-20"></div>
+
+                        <div class="flex items-start justify-between relative z-30">
+                            {{-- ✅ Fix: label role dinamis --}}
+                            <div class="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#5c5c5c] bg-white/30 text-[10px] font-bold text-[#4a4a4a]">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                {{ $roleLabel }}
+                            </div>
+                            <div class="text-[#6a6a6a]">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="relative z-30">
+                            <h3 class="font-semibold text-lg text-[#3a3a3a] leading-tight line-clamp-2">{{ $ws->name }}</h3>
+                        </div>
+
+                        <div class="flex -space-x-1.5 relative z-30">
+                            @foreach($ws->members->take(3) as $member)
+                            {{-- ✅ Fix: $member sudah User, tidak perlu ->user --}}
+                            <img src="{{ $member->profile_picture ?? 'https://ui-avatars.com/api/?name='.urlencode($member->name ?? 'Member').'&size=24&background=random' }}"
+                                class="w-7 h-7 rounded-full border border-[#5c5c5c] object-cover"
+                                title="{{ $member->name }}">
+                            @endforeach
+                            @if($ws->members->count() > 3)
+                            <div class="w-7 h-7 rounded-full border border-[#5c5c5c] bg-[#e6e4df] flex items-center justify-center text-[9px] font-bold text-[#3a3a3a]">
+                                +{{ $ws->members->count() - 3 }}
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
-            @endforelse
+        </a>
+        @empty
+        <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+            <h3 class="font-heading font-semibold text-textmain mb-1">Belum Ada Data</h3>
+            <p class="text-sm text-textsoft">Belum ada workspace yang dibagikan ke kamu.</p>
         </div>
+        @endforelse
     </div>
+</div>
 
     {{-- ===================== MODAL: CREATE WORKSPACE ===================== --}}
     {{-- 1. Gege ubah items-end sm:items-center jadi items-center saja biar selalu di tengah --}}
